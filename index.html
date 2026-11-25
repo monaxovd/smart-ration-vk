@@ -1410,6 +1410,218 @@
       outline: 2px solid var(--emerald);
       outline-offset: 2px;
     }
+
+    /* Onboarding Mode Hiding Nav & Banner */
+    body.is-onboarding .bottom-nav,
+    body.is-onboarding #proBannerBtn,
+    body.is-onboarding .tab-panel,
+    body.is-onboarding #btnOpenGuide,
+    body.is-onboarding #topbarProStatus {
+      display: none !important;
+    }
+
+    body.is-onboarding {
+      padding-bottom: 32px;
+    }
+
+    .onboarding-screen {
+      display: none;
+      max-width: 720px;
+      margin: 0 auto;
+      animation: fadeUp 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    body.is-onboarding .onboarding-screen {
+      display: block;
+    }
+
+    .onboarding-hero {
+      margin-bottom: 18px;
+    }
+
+    .onboarding-hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(24px, 4.4vw, 32px);
+      line-height: 1.18;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      text-wrap: balance;
+    }
+
+    .onboarding-hero p {
+      margin: 0;
+      font-size: 14.5px;
+      color: var(--text-secondary);
+      max-width: 60ch;
+    }
+
+    .live-preview-box {
+      margin: 18px 0;
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(56, 189, 248, 0.08));
+      border: 1px solid var(--emerald-border);
+    }
+
+    .live-preview-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--emerald);
+      margin-bottom: 4px;
+    }
+
+    .live-preview-text {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.45;
+    }
+
+    .live-preview-text span.mono-hi {
+      font-family: var(--font-mono);
+      color: #6EE7B7;
+    }
+
+    /* Interactive ? Help Buttons & Inline Popovers */
+    .label-with-help {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 7px;
+    }
+
+    .label-with-help .field-label {
+      margin-bottom: 0;
+    }
+
+    .help-icon-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color var(--transition), color var(--transition), background-color var(--transition);
+    }
+
+    .help-icon-btn:hover,
+    .help-icon-btn.open {
+      border-color: var(--blue-border);
+      background: var(--blue-soft);
+      color: var(--blue);
+    }
+
+    .inline-hint-box {
+      display: none;
+      margin: 6px 0 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: rgba(56, 189, 248, 0.09);
+      border: 1px solid var(--blue-border);
+      color: #CBD5E1;
+      font-size: 12.5px;
+      line-height: 1.45;
+    }
+
+    .inline-hint-box.visible {
+      display: block;
+    }
+
+    .micro-caption {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 5px;
+      line-height: 1.4;
+    }
+
+    /* Topbar ? Подсказка button */
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .btn-topbar-help {
+      min-height: 36px;
+      padding: 6px 11px;
+      border-radius: 9px;
+      border: 1px solid var(--border-glass);
+      background: var(--bg-surface-solid);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color var(--transition), color var(--transition);
+    }
+
+    .btn-topbar-help:hover {
+      border-color: var(--blue-border);
+      color: var(--text-primary);
+    }
+
+    /* 3-Step Guide Modal */
+    .guide-card {
+      width: 100%;
+      max-width: 440px;
+      background: var(--bg-surface-solid);
+      border: 1px solid var(--emerald-border);
+      border-radius: 22px;
+      padding: 22px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8);
+      margin: auto 16px;
+    }
+
+    .guide-step-badge {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--emerald);
+      margin-bottom: 8px;
+    }
+
+    .guide-text {
+      margin: 0 0 18px;
+      font-size: 15.5px;
+      font-weight: 600;
+      line-height: 1.5;
+      color: var(--text-primary);
+    }
+
+    .guide-dots {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+
+    .guide-dot {
+      height: 5px;
+      flex: 1;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+      transition: background-color var(--transition);
+    }
+
+    .guide-dot.active {
+      background: var(--emerald);
+    }
+
+    .guide-actions {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 10px;
+    }
   </style>
 </head>
 <body>
@@ -1426,11 +1638,136 @@
         </span>
         <span>Умный Рацион PRO</span>
       </div>
-      <div id="topbarProStatus" class="topbar-status free">Базовый</div>
+      <div class="topbar-right">
+        <button type="button" id="btnOpenGuide" class="btn-topbar-help">? Подсказка</button>
+        <div id="topbarProStatus" class="topbar-status free">Базовый</div>
+      </div>
     </div>
   </header>
 
   <main class="app-shell">
+
+    <!-- ЭКРАН ПЕРВОГО ЗАПУСКА: ПОЛНОЭКРАННАЯ АНКЕТА ПОКАЗАТЕЛЕЙ -->
+    <section id="screenOnboarding" class="onboarding-screen" aria-label="Первичная настройка параметров">
+      <div class="onboarding-hero">
+        <h1>Персональный расчёт КБЖУ и бюджета питания</h1>
+        <p>Заполните анкету — мы подберём вашу суточную норму по формуле Миффлина — Сан-Жеора, составим меню из 36 простых блюд и посчитаем точную стоимость порций в рублях.</p>
+      </div>
+
+      <form id="onboardingForm" class="card" novalidate>
+        <div class="form-section">
+          <span class="field-label">Пол</span>
+          <div class="seg-group">
+            <button type="button" class="seg-btn" data-ob-field="sex" data-value="female">Женский</button>
+            <button type="button" class="seg-btn" data-ob-field="sex" data-value="male">Мужской</button>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <span class="field-label">Показатели тела</span>
+          <div class="num-grid" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="input-box">
+              <label for="obAge">Возраст</label>
+              <div class="input-wrap" style="min-height: 50px;">
+                <input id="obAge" type="number" inputmode="numeric" min="14" max="90" required />
+                <span class="input-unit">лет</span>
+              </div>
+            </div>
+            <div class="input-box">
+              <label for="obHeight">Рост</label>
+              <div class="input-wrap" style="min-height: 50px;">
+                <input id="obHeight" type="number" inputmode="numeric" min="120" max="230" required />
+                <span class="input-unit">см</span>
+              </div>
+            </div>
+            <div class="input-box">
+              <label for="obWeight">Текущий вес</label>
+              <div class="input-wrap" style="min-height: 50px;">
+                <input id="obWeight" type="number" inputmode="decimal" step="0.5" min="35" max="220" required />
+                <span class="input-unit">кг</span>
+              </div>
+            </div>
+            <div class="input-box">
+              <label for="obTargetWeight">Целевой вес</label>
+              <div class="input-wrap" style="min-height: 50px;">
+                <input id="obTargetWeight" type="number" inputmode="decimal" step="0.5" min="35" max="220" required />
+                <span class="input-unit">кг</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <span class="field-label">Уровень активности</span>
+          <div class="choice-stack">
+            <button type="button" class="choice-btn" data-ob-field="activity" data-value="min">
+              <span>
+                <span class="choice-title">Минимальный · сидячая работа</span>
+                <span class="choice-desc">Офис или удалёнка, менее 5 000 шагов в день, без тренировок</span>
+              </span>
+            </button>
+            <button type="button" class="choice-btn" data-ob-field="activity" data-value="medium">
+              <span>
+                <span class="choice-title">Средний · 3 тренировки в неделю</span>
+                <span class="choice-desc">Регулярный зал, бег, фитнес или активная ходьба каждый день</span>
+              </span>
+            </button>
+            <button type="button" class="choice-btn" data-ob-field="activity" data-value="high">
+              <span>
+                <span class="choice-title">Высокий · ежедневные нагрузки</span>
+                <span class="choice-desc">Интенсивный спорт 5–7 раз в неделю или физическая работа</span>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <span class="field-label">Ваша цель</span>
+          <div class="seg-group cols-3">
+            <button type="button" class="seg-btn" data-ob-field="goal" data-value="lose">Похудение</button>
+            <button type="button" class="seg-btn" data-ob-field="goal" data-value="maintain">Поддержание</button>
+            <button type="button" class="seg-btn" data-ob-field="goal" data-value="gain">Набор массы</button>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="label-with-help">
+            <span class="field-label">Режим бюджета</span>
+            <button type="button" class="help-icon-btn" data-hint-toggle="hintObBudget" aria-label="Как работает режим Эконом?">?</button>
+          </div>
+          <div id="hintObBudget" class="inline-hint-box">
+            Режим «Эконом» автоматически подбирает блюда с минимальной стоимостью за грамм белка: куриная грудка, яйца, творог, минтай, гречка и сезонные овощи.
+          </div>
+          <div class="choice-stack">
+            <button type="button" class="choice-btn" data-ob-field="budget" data-value="economy">
+              <span>
+                <span class="choice-title">Эконом — минимальная цена за белок</span>
+                <span class="choice-desc">Простые и доступные продукты из любого магазина у дома</span>
+              </span>
+            </button>
+            <button type="button" class="choice-btn" data-ob-field="budget" data-value="standard">
+              <span>
+                <span class="choice-title">Стандарт — расширенное меню</span>
+                <span class="choice-desc">Добавим индейку, говядину, красную рыбу, креветки и авокадо</span>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Живая подсказка-расчёт в реальном времени -->
+        <div class="live-preview-box" aria-live="polite">
+          <div class="live-preview-title">Предварительный расчёт в реальном времени</div>
+          <div id="obLivePreviewText" class="live-preview-text tabular"></div>
+        </div>
+
+        <button type="submit" class="btn-primary" style="min-height: 54px; font-size: 15.5px;">
+          <span>Рассчитать норму и составить меню</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+          </svg>
+        </button>
+      </form>
+    </section>
 
     <!-- Золотая плашка PRO на 24 часа -->
     <button type="button" id="proBannerBtn" class="pro-banner">
@@ -1497,6 +1834,10 @@
                 <div class="budget-label">Бюджет дня</div>
                 <div id="dayBudgetVal" class="budget-val">~0 ₽</div>
               </div>
+              <button type="button" class="help-icon-btn" data-hint-toggle="hintDayCost" aria-label="Как считается цена порции?">?</button>
+            </div>
+            <div id="hintDayCost" class="inline-hint-box" style="margin-top: 8px; margin-bottom: 6px;">
+              Стоимость порции рассчитывается точно по граммовке каждого ингредиента и ценам из раздела «Покупки и Цены».
             </div>
             <p class="budget-sub">
               Съедено сегодня: <strong id="eatenBudgetVal">0 ₽</strong> · В неделю: <strong id="weekBudgetVal">0 ₽</strong>
@@ -1570,10 +1911,16 @@
       <div class="card">
         <div class="section-bar" style="margin-bottom: 6px;">
           <div>
-            <h2>Что есть в холодильнике?</h2>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h2 style="margin: 0;">Что есть в холодильнике?</h2>
+              <button type="button" class="help-icon-btn" data-hint-toggle="hintFridgeInfo" aria-label="Зачем нужен Холодильник?">?</button>
+            </div>
             <p class="section-sub">Отметьте продукты дома — подберём блюда из базы с нулевой доплатой</p>
           </div>
           <button type="button" id="btnFridgeSelectBasic" class="btn-tool">Базовый набор</button>
+        </div>
+        <div id="hintFridgeInfo" class="inline-hint-box">
+          Раздел «Холодильник» помогает приготовить вкусный приём пищи с точным КБЖУ из тех продуктов, которые уже лежат дома — без похода в магазин.
         </div>
 
         <div id="fridgeTagsContainer" class="fridge-tags"></div>
@@ -1660,8 +2007,13 @@
 
         <!-- Правая карточка: Параметры Миффлина — Сан-Жеора -->
         <form id="paramsForm" class="card" novalidate>
-          <h2 style="margin: 0 0 4px; font-size: 18px; font-weight: 800;">Параметры тела и цели</h2>
-          <p class="section-sub" style="margin-bottom: 16px;">Расчёт нормы КБЖУ по формуле Миффлина — Сан-Жеора</p>
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px;">
+            <div>
+              <h2 style="margin: 0 0 4px; font-size: 18px; font-weight: 800;">Параметры тела и цели</h2>
+              <p class="section-sub" style="margin: 0;">Расчёт нормы КБЖУ по формуле Миффлина — Сан-Жеора</p>
+            </div>
+            <button type="button" id="btnReturnOnboarding" class="btn-tool emerald">Изменить мои параметры</button>
+          </div>
 
           <div class="form-section">
             <span class="field-label">Пол</span>
@@ -1711,7 +2063,13 @@
           </div>
 
           <div class="form-section">
-            <span class="field-label">Режим бюджета</span>
+            <div class="label-with-help">
+              <span class="field-label">Режим бюджета</span>
+              <button type="button" class="help-icon-btn" data-hint-toggle="hintProgressBudget" aria-label="Как работает режим Эконом?">?</button>
+            </div>
+            <div id="hintProgressBudget" class="inline-hint-box">
+              «Эконом» отдаёт приоритет недорогим белковым продуктам (курица, яйца, творог, минтай, крупы), снижая дневной чек.
+            </div>
             <div class="choice-stack">
               <button type="button" class="choice-btn" data-field="budget" data-value="economy">
                 <span>
@@ -1816,6 +2174,23 @@
       <div class="sheet-foot">
         <button type="button" id="btnResetPrices" class="btn-secondary">Сбросить цены</button>
         <button type="button" class="btn-primary" data-close="priceModal">Готово</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА: ПОШАГОВЫЙ ГИД (3 ШАГА) -->
+  <div id="guideModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="guideStepTitle" style="align-items: center;">
+    <div class="guide-card">
+      <div id="guideStepTitle" class="guide-step-badge">Шаг 1 из 3</div>
+      <div class="guide-dots" aria-hidden="true">
+        <div class="guide-dot active" data-guide-dot="0"></div>
+        <div class="guide-dot" data-guide-dot="1"></div>
+        <div class="guide-dot" data-guide-dot="2"></div>
+      </div>
+      <p id="guideStepText" class="guide-text"></p>
+      <div class="guide-actions">
+        <button type="button" id="btnGuideSkip" class="btn-secondary">Пропустить</button>
+        <button type="button" id="btnGuideNext" class="btn-primary">Далее</button>
       </div>
     </div>
   </div>
@@ -2240,10 +2615,12 @@
           if (!raw) {
             var initTargets = calculateTargets(defaultParams);
             return {
+              setupDone: false,
+              guideSeen: false,
               activeTab: 'tab-ration',
               params: Object.assign({}, defaultParams),
               targets: initTargets,
-              menu: null, // сгенерируется ниже после объявления функций
+              menu: null,
               customSnacks: [],
               waterMl: 0,
               proExpiresAt: 0,
@@ -2251,12 +2628,14 @@
               fridgeSearched: false,
               customPrices: getDefaultPrices(),
               checkedItems: {},
-              weightLog: [{ date: todayShort(), weight: 70 }]
+              weightLog: [{ date: todayShort(), weight: defaultParams.weight }]
             };
           }
           var p = JSON.parse(raw);
           var params = Object.assign({}, defaultParams, p.params || {});
           return {
+            setupDone: p.setupDone !== undefined ? Boolean(p.setupDone) : true,
+            guideSeen: Boolean(p.guideSeen),
             activeTab: p.activeTab || 'tab-ration',
             params: params,
             targets: p.targets || calculateTargets(params),
@@ -2272,6 +2651,8 @@
           };
         } catch (e) {
           return {
+            setupDone: false,
+            guideSeen: false,
             activeTab: 'tab-ration',
             params: Object.assign({}, defaultParams),
             targets: calculateTargets(defaultParams),
@@ -2290,7 +2671,6 @@
 
       if (!state.menu) {
         state.menu = generateSmartMenu(state.targets, state.params.budget, null);
-        saveState();
       }
 
       function saveState() {
@@ -3227,7 +3607,10 @@
 
       document.querySelectorAll('.modal-backdrop').forEach(function (bd) {
         bd.addEventListener('click', function (e) {
-          if (e.target === bd) bd.classList.remove('open');
+          if (e.target === bd) {
+            if (bd.id === 'guideModal') closeGuide();
+            else bd.classList.remove('open');
+          }
         });
       });
 
@@ -3268,9 +3651,160 @@
         return escapeHtml(str).replace(/'/g, '&#39;');
       }
 
-      // Запуск и обновление таймера PRO раз в секунду
+      // Интерактивные подсказки «?»
+      document.addEventListener('click', function (e) {
+        var toggle = e.target.closest('[data-hint-toggle]');
+        if (!toggle) return;
+        var boxId = toggle.getAttribute('data-hint-toggle');
+        var box = document.getElementById(boxId);
+        if (!box) return;
+        var isOpen = box.classList.toggle('visible');
+        toggle.classList.toggle('open', isOpen);
+      });
+
+      // Онбординг: живой расчёт и переключение полей
+      var obDraft = Object.assign({}, state.params);
+
+      function syncOnboardingForm() {
+        obDraft = Object.assign({}, state.params);
+        document.getElementById('obAge').value = obDraft.age;
+        document.getElementById('obHeight').value = obDraft.height;
+        document.getElementById('obWeight').value = obDraft.weight;
+        document.getElementById('obTargetWeight').value = obDraft.targetWeight;
+
+        document.querySelectorAll('[data-ob-field]').forEach(function (btn) {
+          btn.classList.toggle('active', obDraft[btn.getAttribute('data-ob-field')] === btn.getAttribute('data-value'));
+        });
+        updateOnboardingLiveHint();
+      }
+
+      function updateOnboardingLiveHint() {
+        var age = parseFloat(document.getElementById('obAge').value) || obDraft.age;
+        var height = parseFloat(document.getElementById('obHeight').value) || obDraft.height;
+        var weight = parseFloat(document.getElementById('obWeight').value) || obDraft.weight;
+        var targetWeight = parseFloat(document.getElementById('obTargetWeight').value) || obDraft.targetWeight;
+        var previewTargets = calculateTargets(Object.assign({}, obDraft, {
+          age: Math.max(14, Math.min(90, age)),
+          height: Math.max(120, Math.min(230, height)),
+          weight: Math.max(35, Math.min(220, weight)),
+          targetWeight: Math.max(35, Math.min(220, targetWeight))
+        }));
+        var waterL = (previewTargets.waterTargetMl / 1000).toFixed(1).replace('.', ',');
+        document.getElementById('obLivePreviewText').innerHTML =
+          'Рекомендуемая норма для вашей цели: <span class="mono-hi">~' + previewTargets.calories + ' ккал</span> · белок <span class="mono-hi">~' + previewTargets.protein + ' г/день</span> · вода <span class="mono-hi">' + waterL + ' л</span>';
+      }
+
+      document.querySelectorAll('[data-ob-field]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var f = btn.getAttribute('data-ob-field');
+          obDraft[f] = btn.getAttribute('data-value');
+          document.querySelectorAll('[data-ob-field="' + f + '"]').forEach(function (el) {
+            el.classList.toggle('active', el === btn);
+          });
+          updateOnboardingLiveHint();
+        });
+      });
+
+      ['obAge', 'obHeight', 'obWeight', 'obTargetWeight'].forEach(function (id) {
+        document.getElementById(id).addEventListener('input', updateOnboardingLiveHint);
+      });
+
+      function openOnboardingScreen() {
+        syncOnboardingForm();
+        document.body.classList.add('is-onboarding');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      document.getElementById('btnReturnOnboarding').addEventListener('click', openOnboardingScreen);
+
+      document.getElementById('onboardingForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var age = parseFloat(document.getElementById('obAge').value);
+        var height = parseFloat(document.getElementById('obHeight').value);
+        var weight = parseFloat(document.getElementById('obWeight').value);
+        var targetWeight = parseFloat(document.getElementById('obTargetWeight').value);
+
+        if (isNaN(age) || age < 14 || age > 90 || isNaN(height) || height < 120 || height > 230 || isNaN(weight) || weight < 35 || weight > 220 || isNaN(targetWeight) || targetWeight < 35 || targetWeight > 220) {
+          showToast('Проверьте возраст (14–90), рост (120–230) и вес (35–220)');
+          return;
+        }
+
+        var isFirstFinish = !state.setupDone;
+        state.params = Object.assign({}, obDraft, { age: age, height: height, weight: weight, targetWeight: targetWeight });
+        state.targets = calculateTargets(state.params);
+        state.menu = generateSmartMenu(state.targets, state.params.budget, null);
+        state.setupDone = true;
+
+        if (isFirstFinish || state.weightLog.length === 1) {
+          state.weightLog = [{ date: todayShort(), weight: weight }];
+        }
+
+        saveState();
+        document.body.classList.remove('is-onboarding');
+        renderAll();
+        switchTab('tab-ration');
+
+        if (!state.guideSeen) {
+          openGuide(0);
+        } else {
+          showToast('Параметры обновлены, меню пересчитано');
+        }
+      });
+
+      // Пошаговый гид (3 шага)
+      var GUIDE_STEPS = [
+        'Нажимайте «✓ Съел» на карточках блюд, чтобы кольцо калорий и бюджет дня заполнялись автоматически.',
+        'В разделе «Покупки и Цены» можно указать цены вашего магазина, и стоимость завтрака, обеда и ужина пересчитается.',
+        'Активируйте PRO на 24 часа бесплатно, чтобы открыть подбор блюд из продуктов в вашем холодильнике.'
+      ];
+      var guideIdx = 0;
+
+      function openGuide(stepIndex) {
+        guideIdx = stepIndex || 0;
+        renderGuideStep();
+        document.getElementById('guideModal').classList.add('open');
+      }
+
+      function closeGuide() {
+        document.getElementById('guideModal').classList.remove('open');
+        if (!state.guideSeen) {
+          state.guideSeen = true;
+          saveState();
+        }
+      }
+
+      function renderGuideStep() {
+        document.getElementById('guideStepTitle').textContent = 'Шаг ' + (guideIdx + 1) + ' из ' + GUIDE_STEPS.length;
+        document.getElementById('guideStepText').textContent = GUIDE_STEPS[guideIdx];
+        document.getElementById('btnGuideNext').textContent = guideIdx === GUIDE_STEPS.length - 1 ? 'Понятно' : 'Далее';
+        document.querySelectorAll('[data-guide-dot]').forEach(function (dot) {
+          dot.classList.toggle('active', Number(dot.getAttribute('data-guide-dot')) <= guideIdx);
+        });
+      }
+
+      document.getElementById('btnOpenGuide').addEventListener('click', function () {
+        openGuide(0);
+      });
+
+      document.getElementById('btnGuideNext').addEventListener('click', function () {
+        if (guideIdx < GUIDE_STEPS.length - 1) {
+          guideIdx++;
+          renderGuideStep();
+        } else {
+          closeGuide();
+        }
+      });
+
+      document.getElementById('btnGuideSkip').addEventListener('click', closeGuide);
+
+      // Запуск приложения: при первом открытии показываем анкету
       renderAll();
-      switchTab(state.activeTab || 'tab-ration');
+      if (!state.setupDone) {
+        openOnboardingScreen();
+      } else {
+        document.body.classList.remove('is-onboarding');
+        switchTab(state.activeTab || 'tab-ration');
+      }
       setInterval(updateProBannerUI, 1000);
     })();
   </script>
