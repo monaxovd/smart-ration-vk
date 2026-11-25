@@ -1,0 +1,3278 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Умный Рацион PRO: КБЖУ, Бюджет и Меню</title>
+  <meta name="description" content="Умный Рацион PRO — расчёт КБЖУ по Миффлину — Сан-Жеору, меню из 36 блюд с ценами в рублях, подбор по холодильнику, чек покупок и график веса для ВКонтакте." />
+  <meta property="og:title" content="Умный Рацион PRO: КБЖУ, Бюджет и Меню" />
+  <meta property="og:description" content="Расчёт КБЖУ, точный бюджет дня, подбор блюд из холодильника и динамика веса без сервера." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="theme-color" content="#0B0F17" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- VK Bridge -->
+  <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+
+  <style>
+    :root {
+      --bg-canvas: #0B0F17;
+      --bg-surface: rgba(21, 28, 44, 0.9);
+      --bg-surface-solid: #151C2C;
+      --bg-elevated: #1B2438;
+      --bg-input: #0E1420;
+      --border-glass: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.16);
+
+      --text-primary: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+
+      --emerald: #10B981;
+      --emerald-soft: rgba(16, 185, 129, 0.14);
+      --emerald-border: rgba(16, 185, 129, 0.36);
+
+      --blue: #38BDF8;
+      --blue-soft: rgba(56, 189, 248, 0.14);
+      --blue-border: rgba(56, 189, 248, 0.34);
+
+      --amber: #F59E0B;
+      --amber-soft: rgba(245, 158, 11, 0.14);
+      --amber-border: rgba(245, 158, 11, 0.38);
+
+      --danger: #F87171;
+      --danger-soft: rgba(248, 113, 113, 0.12);
+      --danger-border: rgba(248, 113, 113, 0.32);
+
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --shadow-card: 0 12px 32px -12px rgba(0, 0, 0, 0.65);
+      --transition: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+      --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      --tabbar-h: 64px;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.5;
+      letter-spacing: 0.01em;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body {
+      background-image:
+        radial-gradient(680px 420px at 12% -8%, rgba(16, 185, 129, 0.09), transparent 65%),
+        radial-gradient(560px 380px at 90% 4%, rgba(56, 189, 248, 0.07), transparent 65%);
+      padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 18px);
+    }
+
+    .tabular { font-variant-numeric: tabular-nums; }
+    .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+    /* Compact Sticky Header (<= 52px) */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      height: 52px;
+      background: rgba(11, 15, 23, 0.86);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-glass);
+    }
+
+    .topbar-inner {
+      max-width: 1080px;
+      height: 100%;
+      margin: 0 auto;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 800;
+      font-size: 15.5px;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #10B981, #059669);
+      color: #042219;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 14px rgba(16, 185, 129, 0.35);
+      flex-shrink: 0;
+    }
+
+    .topbar-status {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--amber);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .topbar-status.free {
+      color: var(--text-muted);
+    }
+
+    /* Main Container */
+    .app-shell {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 14px 16px 24px;
+    }
+
+    @media (min-width: 768px) {
+      .app-shell {
+        padding: 20px 24px 36px;
+      }
+    }
+
+    /* Golden PRO Banner (scrollable top strip) */
+    .pro-banner {
+      width: 100%;
+      min-height: 48px;
+      margin-bottom: 16px;
+      padding: 11px 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--amber-border);
+      background: linear-gradient(90deg, rgba(245, 158, 11, 0.18) 0%, rgba(245, 158, 11, 0.08) 100%);
+      color: #FDE68A;
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      text-align: left;
+      box-shadow: 0 6px 24px -10px rgba(245, 158, 11, 0.4);
+      transition: background-color var(--transition), transform var(--transition);
+    }
+
+    .pro-banner:hover {
+      background: linear-gradient(90deg, rgba(245, 158, 11, 0.25) 0%, rgba(245, 158, 11, 0.12) 100%);
+    }
+
+    .pro-banner:active {
+      transform: scale(0.99);
+    }
+
+    .pro-banner.active-pro {
+      cursor: default;
+      border-color: var(--emerald-border);
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.16) 0%, rgba(21, 28, 44, 0.9) 100%);
+      color: #6EE7B7;
+      box-shadow: none;
+    }
+
+    .pro-banner-cta {
+      font-size: 12px;
+      font-weight: 800;
+      color: #0B0F17;
+      background: var(--amber);
+      padding: 6px 11px;
+      border-radius: 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .pro-timer-val {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--emerald);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* Tab Panels */
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+      animation: fadeUp 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tab-panel.active { animation: none; }
+      * { transition-duration: 0.01ms !important; }
+    }
+
+    /* Glass Cards */
+    .card {
+      background: var(--bg-surface);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      padding: 18px;
+    }
+
+    @media (min-width: 640px) {
+      .card { padding: 22px; }
+    }
+
+    /* =========================================================
+       ВКЛАДКА 1: РАЦИОН (ВЕРХНЯЯ ПАНЕЛЬ + 4 КАРТОЧКИ БЛЮД)
+    ========================================================= */
+    .dashboard-top {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    @media (min-width: 860px) {
+      .dashboard-top {
+        grid-template-columns: 1.4fr 1fr;
+        gap: 18px;
+      }
+    }
+
+    .ring-and-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    @media (min-width: 540px) {
+      .ring-and-bars {
+        flex-direction: row;
+        align-items: center;
+        gap: 22px;
+      }
+    }
+
+    .ring-box {
+      position: relative;
+      width: 134px;
+      height: 134px;
+      margin: 0 auto;
+      flex-shrink: 0;
+    }
+
+    @media (min-width: 540px) {
+      .ring-box { margin: 0; }
+    }
+
+    .ring-box svg {
+      width: 134px;
+      height: 134px;
+      transform: rotate(-90deg);
+      filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.32));
+    }
+
+    .ring-inner {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 10px;
+    }
+
+    .ring-eaten {
+      font-family: var(--font-mono);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.1;
+    }
+
+    .ring-norm {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--emerald);
+      margin-top: 3px;
+    }
+
+    .ring-caption {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .bars-col {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+
+    .macro-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .macro-label { font-weight: 700; }
+    .macro-nums { font-family: var(--font-mono); font-size: 12.5px; font-weight: 700; }
+    .macro-nums span.muted { color: var(--text-muted); font-weight: 500; }
+
+    .bar-track {
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .bar-p { background: linear-gradient(90deg, #059669, #10B981); box-shadow: 0 0 10px rgba(16, 185, 129, 0.45); }
+    .bar-f { background: linear-gradient(90deg, #D97706, #F59E0B); box-shadow: 0 0 10px rgba(245, 158, 11, 0.4); }
+    .bar-c { background: linear-gradient(90deg, #0284C7, #38BDF8); box-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
+
+    .summary-meta-line {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-glass);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+    }
+
+    /* Right side of Dashboard Top: Budget + Water */
+    .side-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .budget-box {
+      background: linear-gradient(145deg, rgba(245, 158, 11, 0.11), rgba(21, 28, 44, 0.92));
+      border: 1px solid var(--amber-border);
+      border-radius: var(--radius-lg);
+      padding: 16px 18px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .budget-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .budget-label {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #FCD34D;
+    }
+
+    .budget-val {
+      font-family: var(--font-mono);
+      font-size: 27px;
+      font-weight: 700;
+      color: var(--amber);
+      line-height: 1.15;
+      margin-top: 2px;
+    }
+
+    .budget-sub {
+      margin: 6px 0 12px;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+    }
+
+    .budget-sub strong {
+      font-family: var(--font-mono);
+      color: var(--text-primary);
+    }
+
+    .water-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--blue-border);
+      border-radius: var(--radius-lg);
+      padding: 15px 18px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .water-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+
+    .water-title { font-size: 13px; font-weight: 700; color: var(--blue); }
+    .water-nums { font-family: var(--font-mono); font-size: 13.5px; font-weight: 700; }
+    .water-nums span.muted { color: var(--text-muted); font-weight: 500; }
+
+    .water-btns {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .btn-water-add {
+      flex: 1;
+      min-height: 44px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--blue-border);
+      background: var(--blue-soft);
+      color: #BAE6FD;
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-water-add:hover { background: rgba(56, 189, 248, 0.22); }
+
+    .btn-water-sub {
+      min-width: 44px;
+      min-height: 44px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-glass);
+      background: var(--bg-input);
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      width: 100%;
+      min-height: 48px;
+      padding: 12px 18px;
+      border: none;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #10B981, #059669);
+      color: #042219;
+      font-family: inherit;
+      font-size: 14.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 8px 22px -6px rgba(16, 185, 129, 0.42);
+      transition: filter var(--transition), transform var(--transition);
+    }
+
+    .btn-primary:hover { filter: brightness(1.06); }
+    .btn-primary:active { transform: scale(0.985); }
+
+    .btn-gold {
+      width: 100%;
+      min-height: 48px;
+      padding: 12px 18px;
+      border: none;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #F59E0B, #D97706);
+      color: #1A1002;
+      font-family: inherit;
+      font-size: 14.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 8px 22px -6px rgba(245, 158, 11, 0.4);
+      transition: filter var(--transition), transform var(--transition);
+    }
+
+    .btn-gold:hover { filter: brightness(1.06); }
+    .btn-gold:active { transform: scale(0.985); }
+
+    .btn-secondary {
+      width: 100%;
+      min-height: 46px;
+      padding: 10px 16px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-vk {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 14px;
+      border: 1px solid var(--blue-border);
+      border-radius: var(--radius-sm);
+      background: var(--blue-soft);
+      color: #7DD3FC;
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    /* Section Header & Action Pills */
+    .section-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .section-bar h2 {
+      margin: 0;
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .section-sub {
+      margin: 2px 0 0;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .tool-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn-tool {
+      min-height: 42px;
+      padding: 8px 13px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-glass);
+      background: var(--bg-surface-solid);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .btn-tool.emerald {
+      border-color: var(--emerald-border);
+      background: var(--emerald-soft);
+      color: #6EE7B7;
+    }
+
+    /* Meals Grid */
+    .meals-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    @media (min-width: 820px) {
+      .meals-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+    }
+
+    .meal-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 17px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .meal-card.eaten {
+      border-color: var(--emerald-border);
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.09) 0%, rgba(21, 28, 44, 0.94) 100%);
+    }
+
+    .meal-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .meal-slot-price {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: var(--amber);
+    }
+
+    .meal-slot-price span.slot {
+      color: var(--emerald);
+    }
+
+    .meal-grams {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .meal-title {
+      margin: 0 0 6px;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .meal-macros {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 11px;
+    }
+
+    .ing-list {
+      background: var(--bg-input);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      margin-bottom: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      flex: 1;
+    }
+
+    .ing-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+    }
+
+    .ing-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ing-meta {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-primary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .ing-meta .cost {
+      color: var(--amber);
+      margin-left: 6px;
+    }
+
+    .meal-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    .btn-eaten {
+      min-height: 44px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-strong);
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-eaten.active {
+      background: var(--emerald);
+      border-color: var(--emerald);
+      color: #042219;
+    }
+
+    .btn-swap {
+      min-height: 44px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-glass);
+      background: var(--bg-input);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-swap:hover {
+      color: var(--text-primary);
+      border-color: var(--border-strong);
+    }
+
+    /* Locked PRO Overlay Box */
+    .pro-lock-card {
+      position: relative;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--amber-border);
+      background: var(--bg-surface);
+      padding: 24px 18px;
+      text-align: center;
+      overflow: hidden;
+      margin-top: 14px;
+    }
+
+    .pro-lock-card h3 {
+      margin: 0 0 6px;
+      font-size: 17px;
+      font-weight: 800;
+      color: #FDE68A;
+    }
+
+    .pro-lock-card p {
+      margin: 0 auto 16px;
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      max-width: 44ch;
+    }
+
+    .pro-lock-card .btn-gold {
+      max-width: 440px;
+    }
+
+    /* Custom Snacks */
+    .custom-list {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .custom-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 15px;
+      border-radius: var(--radius-md);
+      background: var(--bg-surface);
+      border: 1px solid var(--emerald-border);
+    }
+
+    .custom-del {
+      min-width: 40px;
+      min-height: 40px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-glass);
+      background: var(--bg-input);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* =========================================================
+       ВКЛАДКА 2: ХОЛОДИЛЬНИК
+    ========================================================= */
+    .fridge-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 14px 0 18px;
+    }
+
+    .fridge-tag {
+      min-height: 42px;
+      padding: 9px 14px;
+      border-radius: 11px;
+      border: 1px solid var(--border-glass);
+      background: var(--bg-input);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all var(--transition);
+    }
+
+    .fridge-tag:hover {
+      border-color: var(--border-strong);
+      color: var(--text-primary);
+    }
+
+    .fridge-tag.selected {
+      background: var(--emerald-soft);
+      border-color: var(--emerald-border);
+      color: #6EE7B7;
+    }
+
+    .fridge-results-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    @media (min-width: 760px) {
+      .fridge-results-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .zero-cost-note {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--emerald);
+    }
+
+    /* =========================================================
+       ВКЛАДКА 3: ПОКУПКИ И ЦЕНЫ
+    ========================================================= */
+    .shop-summary-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border-radius: var(--radius-md);
+      background: var(--amber-soft);
+      border: 1px solid var(--amber-border);
+      margin-bottom: 16px;
+    }
+
+    .shop-total-num {
+      font-family: var(--font-mono);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--amber);
+    }
+
+    .shop-group {
+      margin-bottom: 18px;
+    }
+
+    .shop-group-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--emerald);
+      margin: 0 0 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border-glass);
+    }
+
+    .shop-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 46px;
+      padding: 8px 6px;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .shop-item:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .shop-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .shop-check {
+      width: 22px;
+      height: 22px;
+      border-radius: 7px;
+      border: 2px solid var(--border-strong);
+      background: var(--bg-input);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: #042219;
+    }
+
+    .shop-item.checked .shop-check {
+      background: var(--emerald);
+      border-color: var(--emerald);
+    }
+
+    .shop-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .shop-item.checked .shop-name {
+      color: var(--text-muted);
+      text-decoration: line-through;
+    }
+
+    .shop-right {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .shop-right .price {
+      color: var(--amber);
+      margin-left: 8px;
+    }
+
+    /* =========================================================
+       ВКЛАДКА 4: ПРОГРЕСС (ВЕС + SVG-ГРАФИК + ПАРАМЕТРЫ)
+    ========================================================= */
+    .progress-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 880px) {
+      .progress-grid {
+        grid-template-columns: 1fr 1.1fr;
+        align-items: start;
+      }
+    }
+
+    .weight-chart-wrap {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      padding: 14px 12px 10px;
+      margin: 14px 0;
+    }
+
+    .weight-chart-wrap svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .weight-kpis {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .kpi-tile {
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-input);
+      border: 1px solid var(--border-glass);
+    }
+
+    .kpi-tile-label {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .kpi-tile-val {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .weight-log-form {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .weight-log-list {
+      max-height: 210px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .weight-log-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-input);
+      border: 1px solid var(--border-glass);
+      font-size: 13px;
+    }
+
+    /* Form Controls */
+    .form-section { margin-bottom: 16px; }
+    .field-label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 7px; }
+
+    .seg-group {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      padding: 4px;
+      border-radius: var(--radius-md);
+      background: var(--bg-input);
+      border: 1px solid var(--border-glass);
+    }
+
+    .seg-group.cols-3 { grid-template-columns: 1fr; }
+    @media (min-width: 480px) { .seg-group.cols-3 { grid-template-columns: repeat(3, 1fr); } }
+
+    .seg-btn {
+      min-height: 44px;
+      padding: 8px 10px;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .seg-btn.active {
+      background: var(--bg-elevated);
+      border-color: var(--emerald-border);
+      color: var(--emerald);
+    }
+
+    .num-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .input-box label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+    }
+
+    .input-wrap {
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 0 11px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-input);
+      border: 1px solid var(--border-glass);
+    }
+
+    .input-wrap:focus-within {
+      border-color: var(--emerald);
+    }
+
+    .input-wrap input {
+      width: 100%;
+      min-width: 0;
+      border: none;
+      background: transparent;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 700;
+      outline: none;
+      padding: 8px 0;
+    }
+
+    .input-unit {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-left: 5px;
+    }
+
+    .choice-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .choice-btn {
+      min-height: 48px;
+      padding: 10px 13px;
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      background: var(--bg-input);
+      color: var(--text-primary);
+      font-family: inherit;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .choice-btn.active {
+      border-color: var(--emerald-border);
+      background: rgba(16, 185, 129, 0.08);
+    }
+
+    .choice-title { display: block; font-size: 13.5px; font-weight: 700; }
+    .choice-desc { display: block; font-size: 11.5px; color: var(--text-secondary); margin-top: 2px; }
+
+    /* Bottom Navigation Bar (4 Tabs) */
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 40;
+      height: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px));
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      background: rgba(11, 15, 23, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border-glass);
+    }
+
+    .bottom-nav-inner {
+      max-width: 760px;
+      height: var(--tabbar-h);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      align-items: center;
+    }
+
+    .nav-tab {
+      height: 100%;
+      min-height: 44px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 4px 2px;
+      white-space: nowrap;
+      transition: color var(--transition);
+    }
+
+    .nav-tab .tab-icon {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .nav-tab.active {
+      color: var(--emerald);
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      background: rgba(5, 8, 14, 0.78);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    @media (min-width: 640px) {
+      .modal-backdrop {
+        align-items: center;
+        padding: 20px;
+      }
+    }
+
+    .sheet {
+      width: 100%;
+      max-width: 580px;
+      max-height: 88vh;
+      background: var(--bg-surface-solid);
+      border: 1px solid var(--border-strong);
+      border-radius: 24px 24px 0 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    @media (min-width: 640px) {
+      .sheet { border-radius: 20px; max-height: 84vh; }
+    }
+
+    .sheet-head {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-glass);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .sheet-title { margin: 0; font-size: 17px; font-weight: 800; }
+    .sheet-sub { margin: 2px 0 0; font-size: 12.5px; color: var(--text-secondary); }
+
+    .btn-close {
+      min-width: 44px;
+      min-height: 44px;
+      border-radius: 10px;
+      border: 1px solid var(--border-glass);
+      background: var(--bg-input);
+      color: var(--text-primary);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sheet-body {
+      padding: 16px 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .sheet-foot {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border-glass);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .price-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-glass);
+    }
+
+    .price-row:last-child { border-bottom: none; }
+
+    .price-input-box {
+      display: flex;
+      align-items: center;
+      width: 108px;
+      min-height: 42px;
+      padding: 0 10px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-input);
+      border: 1px solid var(--border-glass);
+      flex-shrink: 0;
+    }
+
+    .price-input-box input {
+      width: 100%;
+      min-width: 0;
+      border: none;
+      background: transparent;
+      color: var(--amber);
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 700;
+      text-align: right;
+      outline: none;
+    }
+
+    .text-input {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-input);
+      border: 1px solid var(--border-glass);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 14.5px;
+      outline: none;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(var(--tabbar-h) + 16px);
+      transform: translateX(-50%) translateY(14px);
+      z-index: 80;
+      background: #1E293B;
+      border: 1px solid var(--border-strong);
+      color: var(--text-primary);
+      padding: 11px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.65);
+      opacity: 0;
+      pointer-events: none;
+      max-width: calc(100vw - 32px);
+      text-align: center;
+      transition: opacity 200ms ease, transform 200ms ease;
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    button:focus-visible, input:focus-visible {
+      outline: 2px solid var(--emerald);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Верхняя панель -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"/>
+            <path d="M10 2c1 .5 2 2 2 5"/>
+          </svg>
+        </span>
+        <span>Умный Рацион PRO</span>
+      </div>
+      <div id="topbarProStatus" class="topbar-status free">Базовый</div>
+    </div>
+  </header>
+
+  <main class="app-shell">
+
+    <!-- Золотая плашка PRO на 24 часа -->
+    <button type="button" id="proBannerBtn" class="pro-banner">
+      <span id="proBannerText">👑 Активировать PRO на 24 часа (Бесплатно за рекламу)</span>
+      <span id="proBannerRight" class="pro-banner-cta">Открыть PRO</span>
+    </button>
+
+    <!-- =====================================================
+         ВКЛАДКА 1: 🍽 РАЦИОН
+    ===================================================== -->
+    <section id="tab-ration" class="tab-panel active" aria-label="Рацион">
+      <div class="dashboard-top">
+        <!-- SVG Кольцо + 3 прогресс-бара -->
+        <div class="card">
+          <div class="ring-and-bars">
+            <div class="ring-box">
+              <svg viewBox="0 0 120 120" aria-hidden="true">
+                <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="10"></circle>
+                <circle id="ringCalArc" cx="60" cy="60" r="50" fill="none" stroke="#10B981" stroke-width="10" stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16"></circle>
+              </svg>
+              <div class="ring-inner">
+                <span id="eatenKcalVal" class="ring-eaten">0</span>
+                <span id="normKcalVal" class="ring-norm">из 0 ккал</span>
+                <span class="ring-caption">Съедено</span>
+              </div>
+            </div>
+
+            <div class="bars-col">
+              <div>
+                <div class="macro-head">
+                  <span class="macro-label" style="color: #6EE7B7;">Белки</span>
+                  <span class="macro-nums"><span id="eatenP">0</span> <span class="muted">/</span> <span id="normP">0 г</span></span>
+                </div>
+                <div class="bar-track"><div id="barP" class="bar-fill bar-p" style="width: 0%;"></div></div>
+              </div>
+              <div>
+                <div class="macro-head">
+                  <span class="macro-label" style="color: #FCD34D;">Жиры</span>
+                  <span class="macro-nums"><span id="eatenF">0</span> <span class="muted">/</span> <span id="normF">0 г</span></span>
+                </div>
+                <div class="bar-track"><div id="barF" class="bar-fill bar-f" style="width: 0%;"></div></div>
+              </div>
+              <div>
+                <div class="macro-head">
+                  <span class="macro-label" style="color: #7DD3FC;">Углеводы</span>
+                  <span class="macro-nums"><span id="eatenC">0</span> <span class="muted">/</span> <span id="normC">0 г</span></span>
+                </div>
+                <div class="bar-track"><div id="barC" class="bar-fill bar-c" style="width: 0%;"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="summary-meta-line tabular">
+            <span id="summaryGoalMeta"></span>
+            <span id="summaryPlanMeta"></span>
+          </div>
+        </div>
+
+        <!-- Правый блок: Бюджет дня + Вода -->
+        <div class="side-stack">
+          <div class="budget-box">
+            <div class="budget-head">
+              <div>
+                <div class="budget-label">Бюджет дня</div>
+                <div id="dayBudgetVal" class="budget-val">~0 ₽</div>
+              </div>
+            </div>
+            <p class="budget-sub">
+              Съедено сегодня: <strong id="eatenBudgetVal">0 ₽</strong> · В неделю: <strong id="weekBudgetVal">0 ₽</strong>
+            </p>
+            <button type="button" id="btnShareWall" class="btn-vk">
+              <span>Поделиться рационом на стене</span>
+            </button>
+          </div>
+
+          <div class="water-box">
+            <div class="water-head">
+              <span class="water-title">Трекер воды</span>
+              <span class="water-nums"><span id="waterDrunkVal">0</span> <span class="muted">/</span> <span id="waterTargetVal">2200 мл</span></span>
+            </div>
+            <div class="bar-track"><div id="barWater" class="bar-fill bar-c" style="width: 0%;"></div></div>
+            <div class="water-btns">
+              <button type="button" id="btnAddWater" class="btn-water-add">+ 250 мл</button>
+              <button type="button" id="btnSubWater" class="btn-water-sub" aria-label="Убавить 250 мл">−</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Заголовок меню и кнопки -->
+      <div class="section-bar">
+        <div>
+          <h2>Меню на день</h2>
+          <p class="section-sub">Отмечайте съеденное, чтобы видеть прогресс КБЖУ и затрат</p>
+        </div>
+        <div class="tool-row">
+          <button type="button" id="btnOpenCustomModal" class="btn-tool emerald">+ Свой перекус</button>
+          <button type="button" id="btnNewDay" class="btn-tool">Новый день</button>
+        </div>
+      </div>
+
+      <!-- Завтрак всегда доступен бесплатно -->
+      <div class="meals-grid" id="breakfastGrid">
+        <div id="slotBreakfast"></div>
+      </div>
+
+      <!-- Остальные приёмы пищи: заблокированы без PRO или открыты при PRO -->
+      <div id="proLockedMeals" class="pro-lock-card">
+        <h3>👑 Обед, Ужин, Перекус и замена блюд — в PRO на 24 часа</h3>
+        <p>В бесплатной версии доступен расчёт КБЖУ, трекер воды и Завтрак. Активируйте PRO бесплатно на 24 часа за короткий просмотр рекламы.</p>
+        <button type="button" class="btn-gold js-activate-pro">
+          <span>👑 Активировать PRO на 24 часа (Бесплатно за рекламу)</span>
+        </button>
+      </div>
+
+      <div id="proUnlockedMeals" class="meals-grid" style="display: none; margin-top: 14px;">
+        <div id="slotLunch"></div>
+        <div id="slotDinner"></div>
+        <div id="slotSnack"></div>
+      </div>
+
+      <!-- Кнопка генерации нового меню (в PRO) -->
+      <div id="proRegenWrap" style="display: none; margin-top: 14px;">
+        <button type="button" id="btnRegenerateMenu" class="btn-secondary">
+          <span>↻ Подобрать новое меню на день</span>
+        </button>
+      </div>
+
+      <!-- Свои добавленные перекусы -->
+      <div id="customSnacksList" class="custom-list"></div>
+    </section>
+
+    <!-- =====================================================
+         ВКЛАДКА 2: 🧊 ХОЛОДИЛЬНИК
+    ===================================================== -->
+    <section id="tab-fridge" class="tab-panel" aria-label="Холодильник">
+      <div class="card">
+        <div class="section-bar" style="margin-bottom: 6px;">
+          <div>
+            <h2>Что есть в холодильнике?</h2>
+            <p class="section-sub">Отметьте продукты дома — подберём блюда из базы с нулевой доплатой</p>
+          </div>
+          <button type="button" id="btnFridgeSelectBasic" class="btn-tool">Базовый набор</button>
+        </div>
+
+        <div id="fridgeTagsContainer" class="fridge-tags"></div>
+
+        <div id="fridgeActionArea">
+          <button type="button" id="btnFindFridgeDishes" class="btn-primary">
+            <span>Собрать блюда из моих продуктов</span>
+          </button>
+        </div>
+
+        <div id="fridgeProGate" class="pro-lock-card" style="display: none; margin-top: 16px;">
+          <h3>👑 Подбор по холодильнику открывается в PRO</h3>
+          <p>Активируйте PRO на 24 часа за рекламу, чтобы мгновенно собирать рецепты из продуктов, которые уже есть дома.</p>
+          <button type="button" class="btn-gold js-activate-pro">
+            <span>👑 Активировать PRO на 24 часа (Бесплатно за рекламу)</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="fridgeResultsWrap" style="margin-top: 16px;"></div>
+    </section>
+
+    <!-- =====================================================
+         ВКЛАДКА 3: 🛒 ПОКУПКИ И ЦЕНЫ
+    ===================================================== -->
+    <section id="tab-shop" class="tab-panel" aria-label="Покупки и Цены">
+      <div class="shop-summary-bar">
+        <div>
+          <div style="font-size: 13px; font-weight: 700; color: #FCD34D;">Чек на неделю (по вашему меню)</div>
+          <div id="shopProgressText" class="tabular" style="font-size: 12.5px; color: var(--text-secondary); margin-top: 2px;"></div>
+        </div>
+        <div id="shopTotalSum" class="shop-total-num">0 ₽</div>
+      </div>
+
+      <div class="tool-row" style="margin-bottom: 14px;">
+        <button type="button" id="btnOpenPriceEditor" class="btn-gold" style="flex: 1; min-width: 240px;">
+          <span>⚙ Настроить цены в моём магазине (₽/кг)</span>
+        </button>
+        <button type="button" id="btnResetChecks" class="btn-tool">Сбросить галочки</button>
+        <button type="button" id="btnCopyShop" class="btn-tool emerald">Скопировать чек</button>
+      </div>
+
+      <div id="shopListCard" class="card"></div>
+    </section>
+
+    <!-- =====================================================
+         ВКЛАДКА 4: 📈 ПРОГРЕСС (ВЕС + ПАРАМЕТРЫ КБЖУ)
+    ===================================================== -->
+    <section id="tab-progress" class="tab-panel" aria-label="Прогресс и параметры">
+      <div class="progress-grid">
+
+        <!-- Левая карточка: Журнал взвешиваний и SVG-график -->
+        <div class="card">
+          <h2 style="margin: 0 0 4px; font-size: 18px; font-weight: 800;">Динамика веса</h2>
+          <p class="section-sub">Отслеживайте изменения — данные хранятся локально</p>
+
+          <div class="weight-kpis" style="margin-top: 14px;">
+            <div class="kpi-tile">
+              <div class="kpi-tile-label">Сейчас</div>
+              <div id="kpiCurWeight" class="kpi-tile-val">70 кг</div>
+            </div>
+            <div class="kpi-tile">
+              <div class="kpi-tile-label">Цель</div>
+              <div id="kpiGoalWeight" class="kpi-tile-val" style="color: var(--emerald);">62 кг</div>
+            </div>
+            <div class="kpi-tile">
+              <div class="kpi-tile-label">Динамика</div>
+              <div id="kpiDiffWeight" class="kpi-tile-val" style="color: var(--blue);">0.0 кг</div>
+            </div>
+          </div>
+
+          <div class="weight-chart-wrap" id="weightChartBox"></div>
+
+          <form id="weightLogForm" class="weight-log-form">
+            <div class="input-wrap" style="flex: 1;">
+              <input id="inputNewWeight" type="number" inputmode="decimal" step="0.1" min="35" max="220" placeholder="Вес сегодня, кг" required />
+              <span class="input-unit">кг</span>
+            </div>
+            <button type="submit" class="btn-primary" style="width: auto; padding: 0 18px; min-height: 44px;">Записать</button>
+          </form>
+
+          <div id="weightLogList" class="weight-log-list"></div>
+        </div>
+
+        <!-- Правая карточка: Параметры Миффлина — Сан-Жеора -->
+        <form id="paramsForm" class="card" novalidate>
+          <h2 style="margin: 0 0 4px; font-size: 18px; font-weight: 800;">Параметры тела и цели</h2>
+          <p class="section-sub" style="margin-bottom: 16px;">Расчёт нормы КБЖУ по формуле Миффлина — Сан-Жеора</p>
+
+          <div class="form-section">
+            <span class="field-label">Пол</span>
+            <div class="seg-group">
+              <button type="button" class="seg-btn" data-field="sex" data-value="female">Женский</button>
+              <button type="button" class="seg-btn" data-field="sex" data-value="male">Мужской</button>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="num-grid">
+              <div class="input-box">
+                <label for="pAge">Возраст</label>
+                <div class="input-wrap"><input id="pAge" type="number" min="14" max="90" required /><span class="input-unit">лет</span></div>
+              </div>
+              <div class="input-box">
+                <label for="pHeight">Рост</label>
+                <div class="input-wrap"><input id="pHeight" type="number" min="120" max="230" required /><span class="input-unit">см</span></div>
+              </div>
+              <div class="input-box">
+                <label for="pWeight">Текущий вес</label>
+                <div class="input-wrap"><input id="pWeight" type="number" step="0.5" min="35" max="220" required /><span class="input-unit">кг</span></div>
+              </div>
+              <div class="input-box">
+                <label for="pTargetWeight">Целевой вес</label>
+                <div class="input-wrap"><input id="pTargetWeight" type="number" step="0.5" min="35" max="220" required /><span class="input-unit">кг</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <span class="field-label">Активность</span>
+            <div class="seg-group cols-3">
+              <button type="button" class="seg-btn" data-field="activity" data-value="min">Минимальная</button>
+              <button type="button" class="seg-btn" data-field="activity" data-value="medium">Средняя</button>
+              <button type="button" class="seg-btn" data-field="activity" data-value="high">Высокая</button>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <span class="field-label">Цель</span>
+            <div class="seg-group cols-3">
+              <button type="button" class="seg-btn" data-field="goal" data-value="lose">Похудение</button>
+              <button type="button" class="seg-btn" data-field="goal" data-value="maintain">Поддержание</button>
+              <button type="button" class="seg-btn" data-field="goal" data-value="gain">Набор массы</button>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <span class="field-label">Режим бюджета</span>
+            <div class="choice-stack">
+              <button type="button" class="choice-btn" data-field="budget" data-value="economy">
+                <span>
+                  <span class="choice-title">Эконом — минимальная цена за белок</span>
+                  <span class="choice-desc">Курица, яйца, творог, минтай, гречка, овсянка</span>
+                </span>
+              </button>
+              <button type="button" class="choice-btn" data-field="budget" data-value="standard">
+                <span>
+                  <span class="choice-title">Стандарт — расширенное меню</span>
+                  <span class="choice-desc">Индейка, говядина, лосось, креветки и авокадо</span>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary">Сохранить и пересчитать рацион</button>
+        </form>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Нижняя навигация из 4 вкладок -->
+  <nav class="bottom-nav" aria-label="Основная навигация">
+    <div class="bottom-nav-inner">
+      <button type="button" class="nav-tab active" data-tab="tab-ration">
+        <span class="tab-icon" aria-hidden="true">🍽</span>
+        <span>Рацион</span>
+      </button>
+      <button type="button" class="nav-tab" data-tab="tab-fridge">
+        <span class="tab-icon" aria-hidden="true">🧊</span>
+        <span>Холодильник</span>
+      </button>
+      <button type="button" class="nav-tab" data-tab="tab-shop">
+        <span class="tab-icon" aria-hidden="true">🛒</span>
+        <span>Покупки и Цены</span>
+      </button>
+      <button type="button" class="nav-tab" data-tab="tab-progress">
+        <span class="tab-icon" aria-hidden="true">📈</span>
+        <span>Прогресс</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- МОДАЛКА: СВОЙ ПЕРЕКУС -->
+  <div id="customModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="customModalTitle">
+    <div class="sheet">
+      <div class="sheet-head">
+        <div>
+          <h2 id="customModalTitle" class="sheet-title">+ Свой перекус</h2>
+          <p class="sheet-sub">Добавится к съеденному КБЖУ и бюджету за день</p>
+        </div>
+        <button type="button" class="btn-close" data-close="customModal" aria-label="Закрыть">✕</button>
+      </div>
+      <form id="customSnackForm" class="sheet-body">
+        <div style="margin-bottom: 12px;">
+          <label for="cmName" class="field-label">Название</label>
+          <input id="cmName" class="text-input" type="text" placeholder="Например: Протеиновый батончик" required />
+        </div>
+        <div class="num-grid">
+          <div class="input-box">
+            <label for="cmKcal">Калории</label>
+            <div class="input-wrap"><input id="cmKcal" type="number" min="1" max="3000" value="200" required /><span class="input-unit">ккал</span></div>
+          </div>
+          <div class="input-box">
+            <label for="cmPrice">Цена</label>
+            <div class="input-wrap"><input id="cmPrice" type="number" min="0" max="10000" value="85" required /><span class="input-unit">₽</span></div>
+          </div>
+          <div class="input-box">
+            <label for="cmP">Белки</label>
+            <div class="input-wrap"><input id="cmP" type="number" min="0" max="300" value="18" required /><span class="input-unit">г</span></div>
+          </div>
+          <div class="input-box">
+            <label for="cmF">Жиры</label>
+            <div class="input-wrap"><input id="cmF" type="number" min="0" max="300" value="6" required /><span class="input-unit">г</span></div>
+          </div>
+          <div class="input-box" style="grid-column: 1 / -1;">
+            <label for="cmC">Углеводы</label>
+            <div class="input-wrap"><input id="cmC" type="number" min="0" max="500" value="18" required /><span class="input-unit">г</span></div>
+          </div>
+        </div>
+        <div style="margin-top: 16px;">
+          <button type="submit" class="btn-primary">Добавить в дневник</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА: РЕДАКТОР ЦЕН (PRO) -->
+  <div id="priceModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="priceModalTitle">
+    <div class="sheet">
+      <div class="sheet-head">
+        <div>
+          <h2 id="priceModalTitle" class="sheet-title">Цены в моём магазине</h2>
+          <p class="sheet-sub">Все блюда и бюджет дня пересчитываются мгновенно</p>
+        </div>
+        <button type="button" class="btn-close" data-close="priceModal" aria-label="Закрыть">✕</button>
+      </div>
+      <div id="priceEditorBody" class="sheet-body"></div>
+      <div class="sheet-foot">
+        <button type="button" id="btnResetPrices" class="btn-secondary">Сбросить цены</button>
+        <button type="button" class="btn-primary" data-close="priceModal">Готово</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* =========================================================
+         1. ИНИЦИАЛИЗАЦИЯ VK BRIDGE
+      ========================================================= */
+      try {
+        if (window.vkBridge && typeof window.vkBridge.send === 'function') {
+          window.vkBridge.send('VKWebAppInit');
+        }
+      } catch (e) {}
+
+      /* =========================================================
+         2. СПРАВОЧНИК ПРОДУКТОВ И ЦЕН (₽)
+      ========================================================= */
+      var PRODUCTS = {
+        chicken_breast: { name: 'Куриная грудка', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 340, cat: 'Мясо и рыба' },
+        chicken_thigh:  { name: 'Куриное бедро без кости', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 320, cat: 'Мясо и рыба' },
+        mince:          { name: 'Фарш (куриный/говяжий)', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 390, cat: 'Мясо и рыба' },
+        turkey:         { name: 'Индейка (филе)', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 490, cat: 'Мясо и рыба' },
+        pollock:        { name: 'Минтай (филе)', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 290, cat: 'Мясо и рыба' },
+        cod:            { name: 'Треска (филе)', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 540, cat: 'Мясо и рыба' },
+        mackerel:       { name: 'Скумбрия (филе)', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 390, cat: 'Мясо и рыба' },
+        salmon:         { name: 'Лосось / сёмга', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 1250, cat: 'Мясо и рыба' },
+        shrimp:         { name: 'Креветки очищенные', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 980, cat: 'Мясо и рыба' },
+        tuna_can:       { name: 'Тунец консервированный', unitLabel: '1 банка (130 г)', unitGrams: 130, defaultPrice: 180, cat: 'Мясо и рыба' },
+        eggs:           { name: 'Яйца С1', unitLabel: '10 шт (~550 г)', unitGrams: 550, defaultPrice: 130, cat: 'Молочка и яйца' },
+        cottage_cheese: { name: 'Творог 5%', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 380, cat: 'Молочка и яйца' },
+        cheese:         { name: 'Сыр твёрдый', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 750, cat: 'Молочка и яйца' },
+        cream_cheese:   { name: 'Сыр творожный / фета', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 680, cat: 'Молочка и яйца' },
+        milk:           { name: 'Молоко 2.5%', unitLabel: '1 л', unitGrams: 1000, defaultPrice: 90, cat: 'Молочка и яйца' },
+        kefir:          { name: 'Кефир 2.5%', unitLabel: '1 л', unitGrams: 1000, defaultPrice: 95, cat: 'Молочка и яйца' },
+        sour_cream:     { name: 'Сметана 15%', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 240, cat: 'Молочка и яйца' },
+        greek_yogurt:   { name: 'Йогурт греческий', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 420, cat: 'Молочка и яйца' },
+        buckwheat:      { name: 'Гречка', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 90, cat: 'Крупы и бакалея' },
+        rice:           { name: 'Рис длиннозёрный', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 110, cat: 'Крупы и бакалея' },
+        oats:           { name: 'Овсянка (хлопья)', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 80, cat: 'Крупы и бакалея' },
+        pasta:          { name: 'Макароны твёрдых сортов', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 120, cat: 'Крупы и бакалея' },
+        pearl_barley:   { name: 'Перловка', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 65, cat: 'Крупы и бакалея' },
+        bulgur_quinoa:  { name: 'Булгур / киноа', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 220, cat: 'Крупы и бакалея' },
+        bread_whole:    { name: 'Хлеб цельнозерновой', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 180, cat: 'Крупы и бакалея' },
+        flour_semolina: { name: 'Рисовая мука / манка', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 110, cat: 'Крупы и бакалея' },
+        bananas:        { name: 'Бананы', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 140, cat: 'Овощи и фрукты' },
+        apples_pears:   { name: 'Яблоки / груши', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 150, cat: 'Овощи и фрукты' },
+        veg_seasonal:   { name: 'Овощи сезонные', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 150, cat: 'Овощи и фрукты' },
+        potato:         { name: 'Картофель', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 65, cat: 'Овощи и фрукты' },
+        frozen_veg:     { name: 'Брокколи / фасоль стручковая', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 260, cat: 'Овощи и фрукты' },
+        avocado:        { name: 'Авокадо', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 580, cat: 'Овощи и фрукты' },
+        berries:        { name: 'Ягоды замороженные', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 420, cat: 'Овощи и фрукты' },
+        corn_can:       { name: 'Кукуруза консервированная', unitLabel: '1 банка (280 г)', unitGrams: 280, defaultPrice: 110, cat: 'Крупы и бакалея' },
+        oil:            { name: 'Масло растительное', unitLabel: '1 л', unitGrams: 1000, defaultPrice: 180, cat: 'Крупы и бакалея' },
+        honey_raisins:  { name: 'Мёд / изюм / томат. паста', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 360, cat: 'Крупы и бакалея' },
+        nuts:           { name: 'Орехи (грецкий / миндаль)', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 950, cat: 'Крупы и бакалея' },
+        peanut_butter:  { name: 'Арахисовая паста', unitLabel: '1 кг', unitGrams: 1000, defaultPrice: 540, cat: 'Крупы и бакалея' }
+      };
+
+      /* Теги для вкладки «🧊 Холодильник» */
+      var FRIDGE_TAGS = [
+        { id: 'eggs', label: 'Яйца' },
+        { id: 'cottage_cheese', label: 'Творог' },
+        { id: 'cheese', label: 'Сыр' },
+        { id: 'chicken_breast', label: 'Куриная грудка' },
+        { id: 'mince', label: 'Фарш' },
+        { id: 'tuna_can', label: 'Тунец' },
+        { id: 'buckwheat', label: 'Гречка' },
+        { id: 'rice', label: 'Рис' },
+        { id: 'oats', label: 'Овсянка' },
+        { id: 'pasta', label: 'Макароны' },
+        { id: 'bananas', label: 'Бананы' },
+        { id: 'veg_seasonal', label: 'Овощи' },
+        { id: 'milk', label: 'Молоко' },
+        { id: 'bread_whole', label: 'Хлеб' }
+      ];
+
+      /* =========================================================
+         3. БАЗА ИЗ 36 РЕАЛЬНЫХ БЛЮД (ПО 9 В КАЖДОМ ПРИЁМЕ ПИЩИ)
+      ========================================================= */
+      var DISHES = [
+        // --- ЗАВТРАКИ (9) ---
+        {
+          id: 'b1', mealType: 'breakfast', tier: 'economy',
+          name: 'Овсянка на молоке с бананом и мёдом',
+          baseGrams: 300, minScale: 0.6, maxScale: 1.9,
+          per100: { kcal: 118, p: 3.6, f: 2.5, c: 20.2 },
+          fridgeTags: ['oats', 'milk', 'bananas'],
+          ingredients: [{ pid: 'oats', grams: 60 }, { pid: 'milk', grams: 180 }, { pid: 'bananas', grams: 80 }, { pid: 'honey_raisins', grams: 10 }]
+        },
+        {
+          id: 'b2', mealType: 'breakfast', tier: 'economy',
+          name: 'Омлет с творогом, сыром и зеленью',
+          baseGrams: 240, minScale: 0.6, maxScale: 2.0,
+          per100: { kcal: 158, p: 13.8, f: 9.8, c: 2.4 },
+          fridgeTags: ['eggs', 'cottage_cheese', 'cheese'],
+          ingredients: [{ pid: 'eggs', grams: 120 }, { pid: 'cottage_cheese', grams: 80 }, { pid: 'cheese', grams: 25 }, { pid: 'veg_seasonal', grams: 15 }]
+        },
+        {
+          id: 'b3', mealType: 'breakfast', tier: 'economy',
+          name: 'Творог 5% со сметаной и бананом',
+          baseGrams: 260, minScale: 0.6, maxScale: 2.0,
+          per100: { kcal: 132, p: 12.2, f: 4.8, c: 9.6 },
+          fridgeTags: ['cottage_cheese', 'bananas'],
+          ingredients: [{ pid: 'cottage_cheese', grams: 170 }, { pid: 'sour_cream', grams: 25 }, { pid: 'bananas', grams: 75 }]
+        },
+        {
+          id: 'b4', mealType: 'breakfast', tier: 'economy',
+          name: 'Яичница с тостами и свежим томатом',
+          baseGrams: 250, minScale: 0.6, maxScale: 1.9,
+          per100: { kcal: 168, p: 10.2, f: 8.6, c: 12.1 },
+          fridgeTags: ['eggs', 'bread_whole', 'veg_seasonal'],
+          ingredients: [{ pid: 'eggs', grams: 120 }, { pid: 'bread_whole', grams: 55 }, { pid: 'veg_seasonal', grams: 75 }, { pid: 'oil', grams: 5 }]
+        },
+        {
+          id: 'b5', mealType: 'breakfast', tier: 'economy',
+          name: 'Творожная запеканка с изюмом',
+          baseGrams: 220, minScale: 0.6, maxScale: 1.95,
+          per100: { kcal: 162, p: 13.2, f: 4.8, c: 16.5 },
+          fridgeTags: ['cottage_cheese', 'eggs'],
+          ingredients: [{ pid: 'cottage_cheese', grams: 160 }, { pid: 'eggs', grams: 55 }, { pid: 'flour_semolina', grams: 20 }, { pid: 'honey_raisins', grams: 15 }]
+        },
+        {
+          id: 'b6', mealType: 'breakfast', tier: 'economy',
+          name: 'Овсяноблин с сыром и яйцом',
+          baseGrams: 230, minScale: 0.6, maxScale: 1.9,
+          per100: { kcal: 176, p: 10.5, f: 8.2, c: 14.8 },
+          fridgeTags: ['oats', 'eggs', 'milk', 'cheese'],
+          ingredients: [{ pid: 'oats', grams: 50 }, { pid: 'eggs', grams: 110 }, { pid: 'milk', grams: 40 }, { pid: 'cheese', grams: 30 }]
+        },
+        {
+          id: 'b7', mealType: 'breakfast', tier: 'economy',
+          name: 'Горячие бутерброды с яйцом и сыром',
+          baseGrams: 210, minScale: 0.6, maxScale: 1.9,
+          per100: { kcal: 218, p: 11.8, f: 11.2, c: 17.4 },
+          fridgeTags: ['bread_whole', 'eggs', 'cheese'],
+          ingredients: [{ pid: 'bread_whole', grams: 75 }, { pid: 'eggs', grams: 100 }, { pid: 'cheese', grams: 35 }]
+        },
+        {
+          id: 'b8', mealType: 'breakfast', tier: 'standard',
+          name: 'Тост с авокадо, яйцом пашот и творожным сыром',
+          baseGrams: 230, minScale: 0.6, maxScale: 1.85,
+          per100: { kcal: 196, p: 8.9, f: 11.4, c: 14.2 },
+          fridgeTags: ['bread_whole', 'eggs'],
+          ingredients: [{ pid: 'bread_whole', grams: 65 }, { pid: 'avocado', grams: 70 }, { pid: 'eggs', grams: 60 }, { pid: 'cream_cheese', grams: 35 }]
+        },
+        {
+          id: 'b9', mealType: 'breakfast', tier: 'standard',
+          name: 'Сырники на рисовой муке с йогуртом и ягодами',
+          baseGrams: 240, minScale: 0.6, maxScale: 1.9,
+          per100: { kcal: 174, p: 14.1, f: 5.8, c: 16.3 },
+          fridgeTags: ['cottage_cheese'],
+          ingredients: [{ pid: 'cottage_cheese', grams: 160 }, { pid: 'flour_semolina', grams: 25 }, { pid: 'greek_yogurt', grams: 40 }, { pid: 'berries', grams: 40 }]
+        },
+
+        // --- ОБЕДЫ (9) ---
+        {
+          id: 'l1', mealType: 'lunch', tier: 'economy',
+          name: 'Куриная грудка на гриле с гречкой и овощами',
+          baseGrams: 350, minScale: 0.6, maxScale: 2.0,
+          per100: { kcal: 129, p: 13.1, f: 2.3, c: 13.6 },
+          fridgeTags: ['chicken_breast', 'buckwheat', 'veg_seasonal'],
+          ingredients: [{ pid: 'chicken_breast', grams: 160 }, { pid: 'buckwheat', grams: 65 }, { pid: 'veg_seasonal', grams: 90 }, { pid: 'oil', grams: 4 }]
+        },
+        {
+          id: 'l2', mealType: 'lunch', tier: 'economy',
+          name: 'Куриная грудка с рисом и свежими овощами',
+          baseGrams: 350, minScale: 0.6, maxScale: 2.0,
+          per100: { kcal: 133, p: 12.6, f: 2.1, c: 15.6 },
+          fridgeTags: ['chicken_breast', 'rice', 'veg_seasonal'],
+          ingredients: [{ pid: 'chicken_breast', grams: 160 }, { pid: 'rice', grams: 65 }, { pid: 'veg_seasonal', grams: 90 }, { pid: 'oil', grams: 4 }]
+        },
+        {
+          id: 'l3', mealType: 'lunch', tier: 'economy',
+          name: 'Макароны с фаршем по-флотски и овощами',
+          baseGrams: 340, minScale: 0.6, maxScale: 1.85,
+          per100: { kcal: 162, p: 11.4, f: 5.4, c: 16.8 },
+          fridgeTags: ['pasta', 'mince', 'veg_seasonal'],
+          ingredients: [{ pid: 'mince', grams: 140 }, { pid: 'pasta', grams: 70 }, { pid: 'veg_seasonal', grams: 50 }, { pid: 'honey_raisins', grams: 10 }]
+        },
+        {
+          id: 'l4', mealType: 'lunch', tier: 'economy',
+          name: 'Котлеты из фарша с гречкой и огурцом',
+          baseGrams: 350, minScale: 0.6, maxScale: 1.9,
+          per100: { kcal: 148, p: 11.2, f: 5.1, c: 14.1 },
+          fridgeTags: ['mince', 'buckwheat', 'veg_seasonal'],
+          ingredients: [{ pid: 'mince', grams: 150 }, { pid: 'buckwheat', grams: 65 }, { pid: 'veg_seasonal', grams: 90 }]
+        },
+        {
+          id: 'l5', mealType: 'lunch', tier: 'economy',
+          name: 'Тунец консервированный с рисом и кукурузой',
+          baseGrams: 320, minScale: 0.6, maxScale: 2.0,
+          per100: { kcal: 132, p: 11.8, f: 1.8, c: 17.1 },
+          fridgeTags: ['tuna_can', 'rice', 'veg_seasonal'],
+          ingredients: [{ pid: 'tuna_can', grams: 130 }, { pid: 'rice', grams: 65 }, { pid: 'corn_can', grams: 50 }, { pid: 'veg_seasonal', grams: 60 }]
+        },
+        {
+          id: 'l6', mealType: 'lunch', tier: 'economy',
+          name: 'Сливочная паста с куриной грудкой и сыром',
+          baseGrams: 330, minScale: 0.6, maxScale: 1.85,
+          per100: { kcal: 158, p: 12.9, f: 4.8, c: 15.6 },
+          fridgeTags: ['pasta', 'chicken_breast', 'cheese', 'milk'],
+          ingredients: [{ pid: 'chicken_breast', grams: 145 }, { pid: 'pasta', grams: 65 }, { pid: 'milk', grams: 70 }, { pid: 'cheese', grams: 25 }]
+        },
+        {
+          id: 'l7', mealType: 'lunch', tier: 'economy',
+          name: 'Тефтели из фарша с рисом и томатным соусом',
+          baseGrams: 350, minScale: 0.6, maxScale: 1.9,
+          per100: { kcal: 145, p: 10.6, f: 4.9, c: 14.4 },
+          fridgeTags: ['mince', 'rice', 'veg_seasonal'],
+          ingredients: [{ pid: 'mince', grams: 145 }, { pid: 'rice', grams: 65 }, { pid: 'veg_seasonal', grams: 60 }, { pid: 'honey_raisins', grams: 15 }]
+        },
+        {
+          id: 'l8', mealType: 'lunch', tier: 'standard',
+          name: 'Филе индейки с булгуром и брокколи',
+          baseGrams: 350, minScale: 0.6, maxScale: 2.0,
+          per100: { kcal: 134, p: 12.9, f: 2.4, c: 14.9 },
+          fridgeTags: ['veg_seasonal'],
+          ingredients: [{ pid: 'turkey', grams: 155 }, { pid: 'bulgur_quinoa', grams: 65 }, { pid: 'frozen_veg', grams: 100 }, { pid: 'oil', grams: 5 }]
+        },
+        {
+          id: 'l9', mealType: 'lunch', tier: 'standard',
+          name: 'Запечённый лосось с киноа и стручковой фасолью',
+          baseGrams: 330, minScale: 0.6, maxScale: 1.85,
+          per100: { kcal: 168, p: 12.5, f: 7.4, c: 12.7 },
+          fridgeTags: ['veg_seasonal'],
+          ingredients: [{ pid: 'salmon', grams: 140 }, { pid: 'bulgur_quinoa', grams: 60 }, { pid: 'frozen_veg', grams: 90 }]
+        },
+
+        // --- УЖИНЫ (9) ---
+        {
+          id: 'd1', mealType: 'dinner', tier: 'economy',
+          name: 'Запечённый минтай с тушёной капустой',
+          baseGrams: 330, minScale: 0.65, maxScale: 2.0,
+          per100: { kcal: 84, p: 11.4, f: 1.9, c: 5.2 },
+          fridgeTags: ['veg_seasonal'],
+          ingredients: [{ pid: 'pollock', grams: 180 }, { pid: 'veg_seasonal', grams: 170 }, { pid: 'oil', grams: 4 }]
+        },
+        {
+          id: 'd2', mealType: 'dinner', tier: 'economy',
+          name: 'Куриная грудка с тушёными сезонными овощами',
+          baseGrams: 340, minScale: 0.65, maxScale: 2.0,
+          per100: { kcal: 96, p: 12.6, f: 2.2, c: 6.1 },
+          fridgeTags: ['chicken_breast', 'veg_seasonal'],
+          ingredients: [{ pid: 'chicken_breast', grams: 160 }, { pid: 'veg_seasonal', grams: 220 }, { pid: 'oil', grams: 4 }]
+        },
+        {
+          id: 'd3', mealType: 'dinner', tier: 'economy',
+          name: 'Салат с тунцом, варёным яйцом и овощами',
+          baseGrams: 300, minScale: 0.65, maxScale: 2.0,
+          per100: { kcal: 98, p: 12.8, f: 3.1, c: 4.5 },
+          fridgeTags: ['tuna_can', 'eggs', 'veg_seasonal'],
+          ingredients: [{ pid: 'tuna_can', grams: 130 }, { pid: 'eggs', grams: 60 }, { pid: 'veg_seasonal', grams: 140 }]
+        },
+        {
+          id: 'd4', mealType: 'dinner', tier: 'economy',
+          name: 'Скумбрия в духовке с отварным картофелем',
+          baseGrams: 320, minScale: 0.6, maxScale: 1.85,
+          per100: { kcal: 152, p: 10.6, f: 8.2, c: 8.8 },
+          fridgeTags: ['veg_seasonal'],
+          ingredients: [{ pid: 'mackerel', grams: 140 }, { pid: 'potato', grams: 150 }, { pid: 'veg_seasonal', grams: 30 }]
+        },
+        {
+          id: 'd5', mealType: 'dinner', tier: 'economy',
+          name: 'Белковый омлет с куриной грудкой и овощами',
+          baseGrams: 290, minScale: 0.65, maxScale: 1.95,
+          per100: { kcal: 112, p: 13.5, f: 4.2, c: 4.8 },
+          fridgeTags: ['eggs', 'chicken_breast', 'veg_seasonal'],
+          ingredients: [{ pid: 'eggs', grams: 120 }, { pid: 'chicken_breast', grams: 90 }, { pid: 'veg_seasonal', grams: 90 }]
+        },
+        {
+          id: 'd6', mealType: 'dinner', tier: 'economy',
+          name: 'Запечённый фарш с овощами и сырной корочкой',
+          baseGrams: 300, minScale: 0.65, maxScale: 1.9,
+          per100: { kcal: 138, p: 12.2, f: 7.4, c: 5.2 },
+          fridgeTags: ['mince', 'veg_seasonal', 'cheese'],
+          ingredients: [{ pid: 'mince', grams: 140 }, { pid: 'veg_seasonal', grams: 140 }, { pid: 'cheese', grams: 25 }]
+        },
+        {
+          id: 'd7', mealType: 'dinner', tier: 'economy',
+          name: 'Творожная запеканка с зеленью и овощным салатом',
+          baseGrams: 300, minScale: 0.65, maxScale: 1.9,
+          per100: { kcal: 104, p: 12.1, f: 3.9, c: 5.0 },
+          fridgeTags: ['cottage_cheese', 'eggs', 'veg_seasonal'],
+          ingredients: [{ pid: 'cottage_cheese', grams: 160 }, { pid: 'eggs', grams: 55 }, { pid: 'veg_seasonal', grams: 110 }]
+        },
+        {
+          id: 'd8', mealType: 'dinner', tier: 'standard',
+          name: 'Треска на пару с цветной капустой и маслом',
+          baseGrams: 330, minScale: 0.65, maxScale: 2.0,
+          per100: { kcal: 92, p: 12.4, f: 2.8, c: 4.1 },
+          fridgeTags: ['veg_seasonal'],
+          ingredients: [{ pid: 'cod', grams: 180 }, { pid: 'frozen_veg', grams: 150 }, { pid: 'oil', grams: 6 }]
+        },
+        {
+          id: 'd9', mealType: 'dinner', tier: 'standard',
+          name: 'Тёплый салат с креветками, овощами и фетой',
+          baseGrams: 280, minScale: 0.65, maxScale: 1.95,
+          per100: { kcal: 114, p: 12.1, f: 5.2, c: 4.5 },
+          fridgeTags: ['veg_seasonal'],
+          ingredients: [{ pid: 'shrimp', grams: 140 }, { pid: 'veg_seasonal', grams: 120 }, { pid: 'cream_cheese', grams: 30 }]
+        },
+
+        // --- ПЕРЕКУСЫ (9) ---
+        {
+          id: 's1', mealType: 'snack', tier: 'economy',
+          name: 'Молочный коктейль с бананом и овсянкой',
+          baseGrams: 310, minScale: 0.6, maxScale: 1.9,
+          per100: { kcal: 78, p: 3.2, f: 2.1, c: 12.2 },
+          fridgeTags: ['milk', 'bananas', 'oats'],
+          ingredients: [{ pid: 'milk', grams: 200 }, { pid: 'bananas', grams: 90 }, { pid: 'oats', grams: 20 }]
+        },
+        {
+          id: 's2', mealType: 'snack', tier: 'economy',
+          name: 'Творог 5% с грецким орехом и мёдом',
+          baseGrams: 180, minScale: 0.6, maxScale: 2.0,
+          per100: { kcal: 164, p: 14.8, f: 9.2, c: 5.4 },
+          fridgeTags: ['cottage_cheese'],
+          ingredients: [{ pid: 'cottage_cheese', grams: 150 }, { pid: 'nuts', grams: 15 }, { pid: 'honey_raisins', grams: 10 }]
+        },
+        {
+          id: 's3', mealType: 'snack', tier: 'economy',
+          name: 'Бутерброд с куриной грудкой и огурцом',
+          baseGrams: 170, minScale: 0.6, maxScale: 2.0,
+          per100: { kcal: 148, p: 13.6, f: 2.8, c: 17.2 },
+          fridgeTags: ['bread_whole', 'chicken_breast', 'veg_seasonal'],
+          ingredients: [{ pid: 'bread_whole', grams: 60 }, { pid: 'chicken_breast', grams: 70 }, { pid: 'veg_seasonal', grams: 40 }]
+        },
+        {
+          id: 's4', mealType: 'snack', tier: 'economy',
+          name: 'Яблоко с арахисовой пастой',
+          baseGrams: 180, minScale: 0.6, maxScale: 1.9,
+          per100: { kcal: 138, p: 4.1, f: 6.9, c: 15.2 },
+          fridgeTags: [],
+          ingredients: [{ pid: 'apples_pears', grams: 150 }, { pid: 'peanut_butter', grams: 25 }]
+        },
+        {
+          id: 's5', mealType: 'snack', tier: 'economy',
+          name: 'Два варёных яйца с тостом и сыром',
+          baseGrams: 180, minScale: 0.6, maxScale: 1.9,
+          per100: { kcal: 184, p: 12.1, f: 10.2, c: 10.6 },
+          fridgeTags: ['eggs', 'bread_whole', 'cheese'],
+          ingredients: [{ pid: 'eggs', grams: 110 }, { pid: 'bread_whole', grams: 45 }, { pid: 'cheese', grams: 25 }]
+        },
+        {
+          id: 's6', mealType: 'snack', tier: 'economy',
+          name: 'Творог 5% с бананом',
+          baseGrams: 220, minScale: 0.6, maxScale: 2.0,
+          per100: { kcal: 112, p: 11.4, f: 3.4, c: 9.0 },
+          fridgeTags: ['cottage_cheese', 'bananas'],
+          ingredients: [{ pid: 'cottage_cheese', grams: 140 }, { pid: 'bananas', grams: 80 }]
+        },
+        {
+          id: 's7', mealType: 'snack', tier: 'economy',
+          name: 'Тост с тунцом и свежим огурцом',
+          baseGrams: 175, minScale: 0.6, maxScale: 2.0,
+          per100: { kcal: 132, p: 11.9, f: 1.6, c: 17.5 },
+          fridgeTags: ['bread_whole', 'tuna_can', 'veg_seasonal'],
+          ingredients: [{ pid: 'bread_whole', grams: 60 }, { pid: 'tuna_can', grams: 75 }, { pid: 'veg_seasonal', grams: 40 }]
+        },
+        {
+          id: 's8', mealType: 'snack', tier: 'standard',
+          name: 'Греческий йогурт с миндалём и грушей',
+          baseGrams: 240, minScale: 0.6, maxScale: 2.0,
+          per100: { kcal: 112, p: 7.4, f: 4.8, c: 9.8 },
+          fridgeTags: [],
+          ingredients: [{ pid: 'greek_yogurt', grams: 140 }, { pid: 'apples_pears', grams: 85 }, { pid: 'nuts', grams: 15 }]
+        },
+        {
+          id: 's9', mealType: 'snack', tier: 'standard',
+          name: 'Тост с творожным сыром и сёмгой',
+          baseGrams: 150, minScale: 0.6, maxScale: 2.0,
+          per100: { kcal: 185, p: 11.5, f: 8.9, c: 14.6 },
+          fridgeTags: ['bread_whole'],
+          ingredients: [{ pid: 'bread_whole', grams: 45 }, { pid: 'cream_cheese', grams: 45 }, { pid: 'salmon', grams: 60 }]
+        }
+      ];
+
+      var MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack'];
+      var MEAL_LABELS = { breakfast: 'Завтрак', lunch: 'Обед', dinner: 'Ужин', snack: 'Перекус' };
+      var ACTIVITY_FACTORS = { min: 1.2, medium: 1.55, high: 1.725 };
+      var GOAL_NAMES = { lose: 'Похудение', maintain: 'Поддержание', gain: 'Набор массы' };
+      var STORAGE_KEY = 'smart_ration_pro_v3';
+
+      /* =========================================================
+         4. СОСТОЯНИЕ И LOCALSTORAGE
+      ========================================================= */
+      function getDefaultPrices() {
+        var map = {};
+        Object.keys(PRODUCTS).forEach(function (k) { map[k] = PRODUCTS[k].defaultPrice; });
+        return map;
+      }
+
+      function todayShort() {
+        var d = new Date();
+        var dd = String(d.getDate()).padStart(2, '0');
+        var mm = String(d.getMonth() + 1).padStart(2, '0');
+        return dd + '.' + mm;
+      }
+
+      var defaultParams = {
+        sex: 'female',
+        age: 28,
+        height: 170,
+        weight: 70,
+        targetWeight: 62,
+        activity: 'medium',
+        goal: 'lose',
+        budget: 'economy'
+      };
+
+      var state = loadState();
+
+      function loadState() {
+        try {
+          var raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) {
+            var initTargets = calculateTargets(defaultParams);
+            return {
+              activeTab: 'tab-ration',
+              params: Object.assign({}, defaultParams),
+              targets: initTargets,
+              menu: null, // сгенерируется ниже после объявления функций
+              customSnacks: [],
+              waterMl: 0,
+              proExpiresAt: 0,
+              fridgeTags: ['eggs', 'cottage_cheese', 'chicken_breast', 'buckwheat', 'veg_seasonal'],
+              fridgeSearched: false,
+              customPrices: getDefaultPrices(),
+              checkedItems: {},
+              weightLog: [{ date: todayShort(), weight: 70 }]
+            };
+          }
+          var p = JSON.parse(raw);
+          var params = Object.assign({}, defaultParams, p.params || {});
+          return {
+            activeTab: p.activeTab || 'tab-ration',
+            params: params,
+            targets: p.targets || calculateTargets(params),
+            menu: Array.isArray(p.menu) && p.menu.length === 4 ? p.menu : null,
+            customSnacks: Array.isArray(p.customSnacks) ? p.customSnacks : [],
+            waterMl: typeof p.waterMl === 'number' ? p.waterMl : 0,
+            proExpiresAt: typeof p.proExpiresAt === 'number' ? p.proExpiresAt : 0,
+            fridgeTags: Array.isArray(p.fridgeTags) ? p.fridgeTags : ['eggs', 'cottage_cheese', 'chicken_breast'],
+            fridgeSearched: Boolean(p.fridgeSearched),
+            customPrices: Object.assign(getDefaultPrices(), p.customPrices || {}),
+            checkedItems: p.checkedItems && typeof p.checkedItems === 'object' ? p.checkedItems : {},
+            weightLog: Array.isArray(p.weightLog) && p.weightLog.length > 0 ? p.weightLog : [{ date: todayShort(), weight: params.weight }]
+          };
+        } catch (e) {
+          return {
+            activeTab: 'tab-ration',
+            params: Object.assign({}, defaultParams),
+            targets: calculateTargets(defaultParams),
+            menu: null,
+            customSnacks: [],
+            waterMl: 0,
+            proExpiresAt: 0,
+            fridgeTags: ['eggs', 'cottage_cheese', 'chicken_breast'],
+            fridgeSearched: false,
+            customPrices: getDefaultPrices(),
+            checkedItems: {},
+            weightLog: [{ date: todayShort(), weight: 70 }]
+          };
+        }
+      }
+
+      if (!state.menu) {
+        state.menu = generateSmartMenu(state.targets, state.params.budget, null);
+        saveState();
+      }
+
+      function saveState() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+      }
+
+      function isProActive() {
+        return Boolean(state.proExpiresAt && Date.now() < state.proExpiresAt);
+      }
+
+      /* =========================================================
+         5. РАСЧЁТЫ КБЖУ И ЦЕН
+      ========================================================= */
+      function calculateTargets(params) {
+        var age = Number(params.age);
+        var height = Number(params.height);
+        var weight = Number(params.weight);
+        var factor = ACTIVITY_FACTORS[params.activity] || 1.55;
+        var bmr = 10 * weight + 6.25 * height - 5 * age + (params.sex === 'male' ? 5 : -161);
+        var tdee = bmr * factor;
+
+        var calories;
+        if (params.goal === 'lose') {
+          calories = Math.max(params.sex === 'male' ? 1450 : 1200, Math.round(tdee * 0.82));
+        } else if (params.goal === 'gain') {
+          calories = Math.round(tdee * 1.14);
+        } else {
+          calories = Math.round(tdee);
+        }
+
+        var proteinPerKg = params.goal === 'lose' ? 1.85 : (params.goal === 'gain' ? 1.9 : 1.6);
+        var protein = Math.max(Math.round((calories * 0.24) / 4), Math.min(Math.round((calories * 0.35) / 4), Math.round(weight * proteinPerKg)));
+        var fat = Math.max(Math.max(40, Math.round((calories * 0.22) / 9)), Math.min(Math.round((calories * 0.33) / 9), Math.round(weight * (params.goal === 'lose' ? 0.85 : 0.95))));
+        var carbs = Math.round(Math.max(240, calories - (protein * 4 + fat * 9)) / 4);
+
+        var waterBonus = params.activity === 'high' ? 500 : (params.activity === 'medium' ? 250 : 0);
+        var waterTargetMl = Math.round(((weight * 31) + waterBonus) / 50) * 50;
+
+        return { calories: calories, protein: protein, fat: fat, carbs: carbs, waterTargetMl: waterTargetMl, bmr: Math.round(bmr), tdee: Math.round(tdee) };
+      }
+
+      function getProductPrice(pid) {
+        var p = state.customPrices[pid];
+        return (typeof p === 'number' && !isNaN(p) && p >= 0) ? p : (PRODUCTS[pid] ? PRODUCTS[pid].defaultPrice : 0);
+      }
+
+      function getDishById(id) {
+        for (var i = 0; i < DISHES.length; i++) if (DISHES[i].id === id) return DISHES[i];
+        return DISHES[0];
+      }
+
+      function dishMacrosAtGrams(dish, grams) {
+        var k = grams / 100;
+        return {
+          kcal: Math.round(dish.per100.kcal * k),
+          p: Math.round(dish.per100.p * k),
+          f: Math.round(dish.per100.f * k),
+          c: Math.round(dish.per100.c * k)
+        };
+      }
+
+      function dishCostDetails(dish, grams) {
+        var scale = grams / dish.baseGrams;
+        var totalCost = 0;
+        var items = [];
+        for (var i = 0; i < dish.ingredients.length; i++) {
+          var ing = dish.ingredients[i];
+          var prod = PRODUCTS[ing.pid];
+          var ingG = ing.grams <= 6 ? Math.max(2, Math.round(ing.grams * scale)) : Math.max(5, Math.round((ing.grams * scale) / 5) * 5);
+          var cost = (ingG / prod.unitGrams) * getProductPrice(ing.pid);
+          totalCost += cost;
+          items.push({ pid: ing.pid, name: prod.name, grams: ingG, cost: Math.round(cost) });
+        }
+        return { totalCost: Math.round(totalCost), items: items };
+      }
+
+      /* =========================================================
+         6. ОПТИМИЗАТОР МЕНЮ
+      ========================================================= */
+      function getDishesPool(mealType, budgetMode) {
+        return DISHES.filter(function (d) {
+          if (d.mealType !== mealType) return false;
+          return budgetMode === 'economy' ? d.tier === 'economy' : true;
+        });
+      }
+
+      function optimizePortions(selectedDishes, targets, eatenFlags) {
+        var scales = [1, 1, 1, 1];
+        var shares = [0.25, 0.35, 0.25, 0.15];
+        for (var i = 0; i < 4; i++) {
+          var d = selectedDishes[i];
+          var bk = (d.baseGrams / 100) * d.per100.kcal;
+          scales[i] = Math.max(d.minScale, Math.min(d.maxScale, (targets.calories * shares[i]) / Math.max(bk, 50)));
+        }
+
+        for (var iter = 0; iter < 36; iter++) {
+          for (var idx = 0; idx < 4; idx++) {
+            var dish = selectedDishes[idx];
+            var bestScale = scales[idx], bestLoss = Infinity;
+            for (var s = 0; s <= 24; s++) {
+              var cand = dish.minScale + ((dish.maxScale - dish.minScale) * s) / 24;
+              scales[idx] = cand;
+              var sk = 0, sp = 0, reg = 0;
+              for (var j = 0; j < 4; j++) {
+                var dj = selectedDishes[j];
+                var g = dj.baseGrams * scales[j];
+                sk += (dj.per100.kcal * g) / 100;
+                sp += (dj.per100.p * g) / 100;
+                reg += Math.pow(scales[j] - 1, 2);
+              }
+              var loss = Math.pow((sk - targets.calories) / targets.calories, 2) * 3 + Math.pow((sp - targets.protein) / targets.protein, 2) * 1.4 + reg * 0.025;
+              if (loss < bestLoss) { bestLoss = loss; bestScale = cand; }
+            }
+            scales[idx] = bestScale;
+          }
+        }
+
+        return selectedDishes.map(function (dm, m) {
+          var g = Math.max(Math.round(dm.baseGrams * dm.minScale), Math.round((dm.baseGrams * scales[m]) / 5) * 5);
+          return { mealType: dm.mealType, dishId: dm.id, grams: g, eaten: eatenFlags ? Boolean(eatenFlags[m]) : false };
+        });
+      }
+
+      function generateSmartMenu(targets, budgetMode, prevMenu) {
+        var best = null, bestScore = Infinity;
+        for (var a = 0; a < 22; a++) {
+          var chosen = [];
+          for (var t = 0; t < MEAL_TYPES.length; t++) {
+            var pool = getDishesPool(MEAL_TYPES[t], budgetMode);
+            var filtered = pool;
+            if (prevMenu && a < 16) {
+              var pid = prevMenu[t] ? prevMenu[t].dishId : null;
+              var alt = pool.filter(function (d) { return d.id !== pid; });
+              if (alt.length) filtered = alt;
+            }
+            chosen.push(filtered[Math.floor(Math.random() * filtered.length)]);
+          }
+          var cand = optimizePortions(chosen, targets, null);
+          var tk = 0, tp = 0, tc = 0;
+          for (var i = 0; i < 4; i++) {
+            var m = dishMacrosAtGrams(chosen[i], cand[i].grams);
+            tk += m.kcal; tp += m.p;
+            if (budgetMode === 'economy') tc += dishCostDetails(chosen[i], cand[i].grams).totalCost;
+          }
+          var sc = Math.abs(tk - targets.calories) / targets.calories + (Math.abs(tp - targets.protein) / targets.protein) * 0.7 + (budgetMode === 'economy' ? tc * 0.0002 : 0);
+          if (sc < bestScore) { bestScore = sc; best = cand; }
+        }
+        return best;
+      }
+
+      /* =========================================================
+         7. VK BRIDGE: PRO НА 24 ЧАСА (РЕКЛАМА) И ПОСТ НА СТЕНУ
+      ========================================================= */
+      function showRewardAd() {
+        return new Promise(function (resolve) {
+          var embedded = false;
+          try {
+            embedded = Boolean(window.vkBridge && typeof window.vkBridge.isEmbedded === 'function' && window.vkBridge.isEmbedded());
+          } catch (e) { embedded = false; }
+
+          if (!embedded) {
+            resolve(true);
+            return;
+          }
+
+          var timeoutPromise = new Promise(function (res) {
+            setTimeout(function () { res({ result: true, timedOut: true }); }, 1500);
+          });
+
+          var adPromise;
+          try {
+            adPromise = window.vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' })
+              .then(function (data) { return data || { result: true }; })
+              .catch(function () { return { result: true }; });
+          } catch (e) {
+            resolve(true);
+            return;
+          }
+
+          Promise.race([adPromise, timeoutPromise]).then(function (res) {
+            resolve(!(res && res.result === false));
+          });
+        });
+      }
+
+      function activatePro24h() {
+        showRewardAd().then(function (ok) {
+          if (!ok) {
+            showToast('Досмотрите рекламный ролик до конца, чтобы активировать PRO');
+            return;
+          }
+          state.proExpiresAt = Date.now() + 24 * 60 * 60 * 1000;
+          saveState();
+          renderAll();
+          showToast('👑 PRO-доступ активирован на 24 часа!');
+        });
+      }
+
+      function shareResultOnWall() {
+        var cost = computeDayCost();
+        var msg = 'Мой рацион в «Умном Рационе PRO»: ' + state.targets.calories + ' ккал, ' + state.targets.protein + ' г белка всего за ~' + cost + ' ₽ в день!';
+
+        var embedded = false;
+        try {
+          embedded = Boolean(window.vkBridge && typeof window.vkBridge.isEmbedded === 'function' && window.vkBridge.isEmbedded());
+        } catch (e) { embedded = false; }
+
+        if (embedded && window.vkBridge && typeof window.vkBridge.send === 'function') {
+          try {
+            window.vkBridge.send('VKWebAppShowWallPostBox', { message: msg })
+              .then(function () { showToast('Запись готова к публикации'); })
+              .catch(function () { copyTextFallback(msg, 'Текст результата скопирован'); });
+            return;
+          } catch (e) {}
+        }
+        copyTextFallback(msg, 'Текст результата скопирован в буфер обмена');
+      }
+
+      /* =========================================================
+         8. РЕНДЕРИНГ ВСЕХ 4 ВКЛАДОК И ТАЙМЕРА PRO
+      ========================================================= */
+      function computeDayCost() {
+        var total = 0;
+        for (var i = 0; i < state.menu.length; i++) {
+          var item = state.menu[i];
+          total += dishCostDetails(getDishById(item.dishId), item.grams).totalCost;
+        }
+        for (var j = 0; j < state.customSnacks.length; j++) {
+          total += Number(state.customSnacks[j].price) || 0;
+        }
+        return Math.round(total);
+      }
+
+      function updateProBannerUI() {
+        var pro = isProActive();
+        var banner = document.getElementById('proBannerBtn');
+        var bannerText = document.getElementById('proBannerText');
+        var bannerRight = document.getElementById('proBannerRight');
+        var topStatus = document.getElementById('topbarProStatus');
+
+        if (pro) {
+          var remMs = Math.max(0, state.proExpiresAt - Date.now());
+          var hrs = String(Math.floor(remMs / 3600000)).padStart(2, '0');
+          var mins = String(Math.floor((remMs % 3600000) / 60000)).padStart(2, '0');
+          var secs = String(Math.floor((remMs % 60000) / 1000)).padStart(2, '0');
+          var countdown = hrs + ':' + mins + ':' + secs;
+
+          banner.classList.add('active-pro');
+          bannerText.textContent = '👑 PRO активен — открыты все блюда, холодильник и цены';
+          bannerRight.className = 'pro-timer-val';
+          bannerRight.textContent = countdown;
+          topStatus.className = 'topbar-status';
+          topStatus.textContent = '👑 PRO · ' + countdown;
+        } else {
+          banner.classList.remove('active-pro');
+          bannerText.textContent = '👑 Активировать PRO на 24 часа (Бесплатно за рекламу)';
+          bannerRight.className = 'pro-banner-cta';
+          bannerRight.textContent = 'Открыть PRO';
+          topStatus.className = 'topbar-status free';
+          topStatus.textContent = 'Базовый';
+        }
+      }
+
+      function renderMealCardHtml(menuItem) {
+        var dish = getDishById(menuItem.dishId);
+        var macros = dishMacrosAtGrams(dish, menuItem.grams);
+        var costData = dishCostDetails(dish, menuItem.grams);
+        var eaten = Boolean(menuItem.eaten);
+
+        var ingHtml = costData.items.map(function (ing) {
+          return (
+            '<div class="ing-row">' +
+              '<span class="ing-name">' + escapeHtml(ing.name) + '</span>' +
+              '<span class="ing-meta">' + ing.grams + ' г <span class="cost">~' + ing.cost + ' ₽</span></span>' +
+            '</div>'
+          );
+        }).join('');
+
+        return (
+          '<article class="meal-card' + (eaten ? ' eaten' : '') + '">' +
+            '<div class="meal-card-head">' +
+              '<span class="meal-slot-price"><span class="slot">' + MEAL_LABELS[menuItem.mealType] + '</span> • ~' + costData.totalCost + ' ₽</span>' +
+              '<span class="meal-grams">' + menuItem.grams + ' г</span>' +
+            '</div>' +
+            '<h3 class="meal-title">' + escapeHtml(dish.name) + '</h3>' +
+            '<div class="meal-macros tabular">' + macros.kcal + ' ккал · Б ' + macros.p + ' г · Ж ' + macros.f + ' г · У ' + macros.c + ' г</div>' +
+            '<div class="ing-list">' + ingHtml + '</div>' +
+            '<div class="meal-btns">' +
+              '<button type="button" class="btn-eaten' + (eaten ? ' active' : '') + '" data-toggle-eaten="' + menuItem.mealType + '">' +
+                (eaten ? '✓ Съедено' : '✓ Съел') +
+              '</button>' +
+              '<button type="button" class="btn-swap" data-swap="' + menuItem.mealType + '">' +
+                (isProActive() ? '↻ Заменить' : '👑 Заменить') +
+              '</button>' +
+            '</div>' +
+          '</article>'
+        );
+      }
+
+      function renderRationTab() {
+        var t = state.targets;
+        var p = state.params;
+        var pro = isProActive();
+
+        var eatenK = 0, eatenP = 0, eatenF = 0, eatenC = 0, eatenCost = 0;
+        var plannedCost = 0;
+
+        for (var i = 0; i < state.menu.length; i++) {
+          var item = state.menu[i];
+          var d = getDishById(item.dishId);
+          var m = dishMacrosAtGrams(d, item.grams);
+          var c = dishCostDetails(d, item.grams).totalCost;
+          plannedCost += c;
+          if (item.eaten) {
+            eatenK += m.kcal; eatenP += m.p; eatenF += m.f; eatenC += m.c; eatenCost += c;
+          }
+        }
+
+        for (var j = 0; j < state.customSnacks.length; j++) {
+          var cm = state.customSnacks[j];
+          eatenK += cm.kcal; eatenP += cm.p; eatenF += cm.f; eatenC += cm.c;
+          eatenCost += cm.price; plannedCost += cm.price;
+        }
+
+        // Кольцо
+        document.getElementById('eatenKcalVal').textContent = eatenK;
+        document.getElementById('normKcalVal').textContent = 'из ' + t.calories + ' ккал';
+        var arc = document.getElementById('ringCalArc');
+        arc.setAttribute('stroke-dashoffset', (314.16 * (1 - Math.min(1, eatenK / Math.max(1, t.calories)))).toFixed(1));
+        arc.setAttribute('stroke', eatenK > t.calories * 1.1 ? '#F59E0B' : '#10B981');
+
+        // БЖУ бары
+        document.getElementById('eatenP').textContent = eatenP;
+        document.getElementById('normP').textContent = t.protein + ' г';
+        document.getElementById('barP').style.width = Math.min(100, Math.round((eatenP / Math.max(1, t.protein)) * 100)) + '%';
+
+        document.getElementById('eatenF').textContent = eatenF;
+        document.getElementById('normF').textContent = t.fat + ' г';
+        document.getElementById('barF').style.width = Math.min(100, Math.round((eatenF / Math.max(1, t.fat)) * 100)) + '%';
+
+        document.getElementById('eatenC').textContent = eatenC;
+        document.getElementById('normC').textContent = t.carbs + ' г';
+        document.getElementById('barC').style.width = Math.min(100, Math.round((eatenC / Math.max(1, t.carbs)) * 100)) + '%';
+
+        document.getElementById('summaryGoalMeta').textContent = GOAL_NAMES[p.goal] + ' · ' + (p.budget === 'economy' ? 'Эконом' : 'Стандарт');
+        document.getElementById('summaryPlanMeta').textContent = 'Базовый обмен ' + t.bmr + ' ккал';
+
+        // Бюджет и Вода
+        document.getElementById('dayBudgetVal').textContent = '~' + plannedCost + ' ₽';
+        document.getElementById('eatenBudgetVal').textContent = eatenCost + ' ₽';
+        document.getElementById('weekBudgetVal').textContent = (plannedCost * 7) + ' ₽';
+
+        document.getElementById('waterDrunkVal').textContent = state.waterMl;
+        document.getElementById('waterTargetVal').textContent = t.waterTargetMl + ' мл';
+        document.getElementById('barWater').style.width = Math.min(100, Math.round((state.waterMl / Math.max(1, t.waterTargetMl)) * 100)) + '%';
+
+        // Карточки приёмов пищи
+        document.getElementById('slotBreakfast').innerHTML = renderMealCardHtml(state.menu[0]);
+        document.getElementById('slotLunch').innerHTML = renderMealCardHtml(state.menu[1]);
+        document.getElementById('slotDinner').innerHTML = renderMealCardHtml(state.menu[2]);
+        document.getElementById('slotSnack').innerHTML = renderMealCardHtml(state.menu[3]);
+
+        document.getElementById('proLockedMeals').style.display = pro ? 'none' : 'block';
+        document.getElementById('proUnlockedMeals').style.display = pro ? 'grid' : 'none';
+        document.getElementById('proRegenWrap').style.display = pro ? 'block' : 'none';
+
+        // Свои перекусы
+        var cEl = document.getElementById('customSnacksList');
+        cEl.innerHTML = state.customSnacks.map(function (cm) {
+          return (
+            '<div class="custom-row">' +
+              '<div>' +
+                '<div style="font-size:14px;font-weight:700;">' + escapeHtml(cm.name) + '</div>' +
+                '<div class="tabular" style="font-size:12.5px;color:var(--text-secondary);">' + cm.kcal + ' ккал · Б ' + cm.p + ' г · Ж ' + cm.f + ' г · У ' + cm.c + ' г · <span style="color:var(--amber);font-weight:700;">' + cm.price + ' ₽</span></div>' +
+              '</div>' +
+              '<button type="button" class="custom-del" data-del-custom="' + escapeAttr(cm.id) + '" aria-label="Удалить">✕</button>' +
+            '</div>'
+          );
+        }).join('');
+      }
+
+      /* --- Вкладка 2: Холодильник --- */
+      function renderFridgeTab() {
+        var tagsHtml = FRIDGE_TAGS.map(function (t) {
+          var sel = state.fridgeTags.indexOf(t.id) !== -1;
+          return '<button type="button" class="fridge-tag' + (sel ? ' selected' : '') + '" data-fridge-tag="' + t.id + '">' + escapeHtml(t.label) + '</button>';
+        }).join('');
+        document.getElementById('fridgeTagsContainer').innerHTML = tagsHtml;
+
+        var pro = isProActive();
+        document.getElementById('fridgeActionArea').style.display = pro ? 'block' : 'none';
+        document.getElementById('fridgeProGate').style.display = pro ? 'none' : 'block';
+
+        var resWrap = document.getElementById('fridgeResultsWrap');
+        if (!pro || !state.fridgeSearched) {
+          resWrap.innerHTML = '';
+          return;
+        }
+
+        var selectedSet = {};
+        state.fridgeTags.forEach(function (id) { selectedSet[id] = true; });
+
+        var exactMatches = DISHES.filter(function (d) {
+          if (!d.fridgeTags || d.fridgeTags.length === 0) return false;
+          for (var i = 0; i < d.fridgeTags.length; i++) {
+            if (!selectedSet[d.fridgeTags[i]]) return false;
+          }
+          return true;
+        });
+
+        if (exactMatches.length === 0) {
+          resWrap.innerHTML = (
+            '<div class="card" style="text-align:center;">' +
+              '<h3 style="margin:0 0 6px;font-size:16px;">Пока нет точных совпадений</h3>' +
+              '<p class="section-sub">Отметьте ещё 1–2 базовых продукта (например, Яйца, Овощи или Крупу) и нажмите «Собрать блюда».</p>' +
+            '</div>'
+          );
+          return;
+        }
+
+        var cardsHtml = exactMatches.map(function (d) {
+          var m = dishMacrosAtGrams(d, d.baseGrams);
+          var ingStr = d.ingredients.map(function (ing) { return PRODUCTS[ing.pid].name + ' (' + ing.grams + ' г)'; }).join(', ');
+          return (
+            '<article class="meal-card">' +
+              '<div class="meal-card-head">' +
+                '<span class="zero-cost-note">0 ₽ доплаты · всё есть дома</span>' +
+                '<span class="meal-grams">' + d.baseGrams + ' г</span>' +
+              '</div>' +
+              '<h3 class="meal-title">' + escapeHtml(d.name) + '</h3>' +
+              '<div class="meal-macros tabular">' + MEAL_LABELS[d.mealType] + ' · ' + m.kcal + ' ккал · Б ' + m.p + ' г · Ж ' + m.f + ' г · У ' + m.c + ' г</div>' +
+              '<div style="font-size:12.5px;color:var(--text-muted);margin-bottom:12px;">' + escapeHtml(ingStr) + '</div>' +
+              '<button type="button" class="btn-secondary" data-use-fridge-dish="' + d.id + '">Поставить в «Рацион»</button>' +
+            '</article>'
+          );
+        }).join('');
+
+        resWrap.innerHTML =
+          '<h3 style="margin:0 0 10px;font-size:16px;">Подходящие блюда (' + exactMatches.length + ')</h3>' +
+          '<div class="fridge-results-grid">' + cardsHtml + '</div>';
+      }
+
+      /* --- Вкладка 3: Покупки и Цены --- */
+      function buildWeeklyShopping() {
+        var map = {};
+        for (var i = 0; i < state.menu.length; i++) {
+          var item = state.menu[i];
+          var dish = getDishById(item.dishId);
+          var scale = item.grams / dish.baseGrams;
+          for (var j = 0; j < dish.ingredients.length; j++) {
+            var ing = dish.ingredients[j];
+            var prod = PRODUCTS[ing.pid];
+            if (!map[ing.pid]) map[ing.pid] = { pid: ing.pid, name: prod.name, cat: prod.cat, grams: 0, cost: 0 };
+            map[ing.pid].grams += Math.round(ing.grams * scale * 7);
+          }
+        }
+
+        var catOrder = ['Мясо и рыба', 'Молочка и яйца', 'Крупы и бакалея', 'Овощи и фрукты'];
+        var groupsMap = {};
+        catOrder.forEach(function (c) { groupsMap[c] = []; });
+
+        var totalSum = 0;
+        Object.keys(map).forEach(function (pid) {
+          var e = map[pid];
+          var prod = PRODUCTS[pid];
+          e.grams = Math.max(10, Math.round(e.grams / 10) * 10);
+          e.cost = Math.round((e.grams / prod.unitGrams) * getProductPrice(pid));
+          totalSum += e.cost;
+          if (!groupsMap[e.cat]) groupsMap[e.cat] = [];
+          groupsMap[e.cat].push(e);
+        });
+
+        var groups = [];
+        Object.keys(groupsMap).forEach(function (cat) {
+          if (groupsMap[cat].length) {
+            groupsMap[cat].sort(function (a, b) { return a.name.localeCompare(b.name, 'ru'); });
+            groups.push({ category: cat, items: groupsMap[cat] });
+          }
+        });
+        return { groups: groups, totalSum: totalSum };
+      }
+
+      function formatWeight(g) {
+        return g >= 1000 ? (Math.round((g / 1000) * 100) / 100).toString().replace('.', ',') + ' кг' : g + ' г';
+      }
+
+      function renderShopTab() {
+        var data = buildWeeklyShopping();
+        var totalCount = 0, checkedCount = 0;
+        var html = '';
+
+        for (var g = 0; g < data.groups.length; g++) {
+          var gr = data.groups[g];
+          html += '<div class="shop-group"><h3 class="shop-group-title">' + escapeHtml(gr.category) + '</h3>';
+          for (var i = 0; i < gr.items.length; i++) {
+            var it = gr.items[i];
+            var chk = Boolean(state.checkedItems[it.pid]);
+            totalCount++; if (chk) checkedCount++;
+            html += (
+              '<div class="shop-item' + (chk ? ' checked' : '') + '" data-shop-pid="' + it.pid + '" role="checkbox" aria-checked="' + chk + '" tabindex="0">' +
+                '<div class="shop-left">' +
+                  '<span class="shop-check" aria-hidden="true">' + (chk ? '✓' : '') + '</span>' +
+                  '<span class="shop-name">' + escapeHtml(it.name) + '</span>' +
+                '</div>' +
+                '<span class="shop-right">' + formatWeight(it.grams) + '<span class="price">~' + it.cost + ' ₽</span></span>' +
+              '</div>'
+            );
+          }
+          html += '</div>';
+        }
+
+        document.getElementById('shopListCard').innerHTML = html;
+        document.getElementById('shopTotalSum').textContent = '~' + data.totalSum + ' ₽';
+        document.getElementById('shopProgressText').textContent = 'Куплено ' + checkedCount + ' из ' + totalCount + ' позиций';
+      }
+
+      /* --- Вкладка 4: Прогресс (SVG-график веса + Параметры) --- */
+      function renderWeightChart() {
+        var log = state.weightLog;
+        var goal = Number(state.params.targetWeight);
+        var cur = log[log.length - 1].weight;
+        var start = log[0].weight;
+        var diff = Math.round((cur - start) * 10) / 10;
+
+        document.getElementById('kpiCurWeight').textContent = cur + ' кг';
+        document.getElementById('kpiGoalWeight').textContent = goal + ' кг';
+        document.getElementById('kpiDiffWeight').textContent = (diff > 0 ? '+' : '') + diff + ' кг';
+
+        var box = document.getElementById('weightChartBox');
+        var vals = log.map(function (r) { return r.weight; }).concat([goal]);
+        var minV = Math.min.apply(null, vals) - 1.5;
+        var maxV = Math.max.apply(null, vals) + 1.5;
+        if (maxV - minV < 4) { minV -= 2; maxV += 2; }
+
+        var W = 420, H = 165, padL = 36, padR = 16, padT = 16, padB = 26;
+        var plotW = W - padL - padR;
+        var plotH = H - padT - padB;
+
+        function yOf(v) {
+          return padT + ((maxV - v) / (maxV - minV)) * plotH;
+        }
+        function xOf(idx) {
+          if (log.length === 1) return padL + plotW / 2;
+          return padL + (idx / (log.length - 1)) * plotW;
+        }
+
+        var goalY = yOf(goal);
+        var pts = log.map(function (r, idx) { return { x: xOf(idx), y: yOf(r.weight), d: r.date, w: r.weight }; });
+        var polyPts = pts.map(function (p) { return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' ');
+        var areaPath = 'M ' + pts[0].x.toFixed(1) + ',' + (padT + plotH) + ' ' +
+          pts.map(function (p) { return 'L ' + p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' ') +
+          ' L ' + pts[pts.length - 1].x.toFixed(1) + ',' + (padT + plotH) + ' Z';
+
+        var circles = pts.map(function (p, i) {
+          var showLabel = log.length <= 7 || i === 0 || i === log.length - 1;
+          return (
+            '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="4.2" fill="#10B981" stroke="#0B0F17" stroke-width="2" />' +
+            (showLabel ? '<text x="' + p.x.toFixed(1) + '" y="' + (H - 6) + '" fill="#64748B" font-size="10" font-family="JetBrains Mono, monospace" text-anchor="middle">' + p.d + '</text>' : '')
+          );
+        }).join('');
+
+        box.innerHTML = (
+          '<svg viewBox="0 0 ' + W + ' ' + H + '" aria-label="График динамики веса">' +
+            '<defs>' +
+              '<linearGradient id="wGrad" x1="0" y1="0" x2="0" y2="1">' +
+                '<stop offset="0%" stop-color="#10B981" stop-opacity="0.32" />' +
+                '<stop offset="100%" stop-color="#10B981" stop-opacity="0.0" />' +
+              '</linearGradient>' +
+            '</defs>' +
+            '<line x1="' + padL + '" y1="' + goalY.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + goalY.toFixed(1) + '" stroke="#F59E0B" stroke-width="1.2" stroke-dasharray="4 4" opacity="0.7" />' +
+            '<text x="4" y="' + (goalY + 3).toFixed(1) + '" fill="#F59E0B" font-size="10" font-family="JetBrains Mono, monospace">' + goal + '</text>' +
+            (pts.length > 1 ? '<path d="' + areaPath + '" fill="url(#wGrad)" />' : '') +
+            (pts.length > 1 ? '<polyline points="' + polyPts + '" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />' : '') +
+            circles +
+          '</svg>'
+        );
+
+        var listHtml = log.slice().reverse().map(function (entry, revIdx) {
+          var realIdx = log.length - 1 - revIdx;
+          return (
+            '<div class="weight-log-row">' +
+              '<span class="mono" style="color:var(--text-secondary);">' + entry.date + '</span>' +
+              '<span class="mono" style="font-weight:700;">' + entry.weight + ' кг</span>' +
+              (log.length > 1 ? '<button type="button" class="custom-del" style="min-width:34px;min-height:34px;" data-del-weight="' + realIdx + '" aria-label="Удалить запись">✕</button>' : '<span style="width:34px;"></span>') +
+            '</div>'
+          );
+        }).join('');
+        document.getElementById('weightLogList').innerHTML = listHtml;
+      }
+
+      function renderProgressTab() {
+        var p = state.params;
+        document.getElementById('pAge').value = p.age;
+        document.getElementById('pHeight').value = p.height;
+        document.getElementById('pWeight').value = p.weight;
+        document.getElementById('pTargetWeight').value = p.targetWeight;
+
+        document.querySelectorAll('#paramsForm [data-field]').forEach(function (btn) {
+          btn.classList.toggle('active', p[btn.getAttribute('data-field')] === btn.getAttribute('data-value'));
+        });
+
+        renderWeightChart();
+      }
+
+      function renderPriceEditor() {
+        var keys = Object.keys(PRODUCTS).sort(function (a, b) {
+          return PRODUCTS[a].name.localeCompare(PRODUCTS[b].name, 'ru');
+        });
+        document.getElementById('priceEditorBody').innerHTML = keys.map(function (pid) {
+          var pr = PRODUCTS[pid];
+          return (
+            '<div class="price-row">' +
+              '<div><div style="font-size:14px;font-weight:600;">' + escapeHtml(pr.name) + '</div><div style="font-size:12px;color:var(--text-muted);">За ' + escapeHtml(pr.unitLabel) + '</div></div>' +
+              '<div class="price-input-box"><input type="number" min="0" max="50000" data-price-pid="' + pid + '" value="' + getProductPrice(pid) + '" /><span style="margin-left:4px;color:var(--text-muted);font-weight:700;">₽</span></div>' +
+            '</div>'
+          );
+        }).join('');
+      }
+
+      function switchTab(tabId) {
+        state.activeTab = tabId;
+        document.querySelectorAll('.tab-panel').forEach(function (p) {
+          p.classList.toggle('active', p.id === tabId);
+        });
+        document.querySelectorAll('.nav-tab').forEach(function (b) {
+          b.classList.toggle('active', b.getAttribute('data-tab') === tabId);
+        });
+        saveState();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function renderAll() {
+        updateProBannerUI();
+        renderRationTab();
+        renderFridgeTab();
+        renderShopTab();
+        renderProgressTab();
+      }
+
+      /* =========================================================
+         9. ОБРАБОТЧИКИ СОБЫТИЙ
+      ========================================================= */
+      // Навигация по 4 вкладкам
+      document.querySelectorAll('.nav-tab').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          switchTab(btn.getAttribute('data-tab'));
+        });
+      });
+
+      // Активация PRO 24ч
+      document.getElementById('proBannerBtn').addEventListener('click', function () {
+        if (!isProActive()) activatePro24h();
+      });
+      document.querySelectorAll('.js-activate-pro').forEach(function (btn) {
+        btn.addEventListener('click', activatePro24h);
+      });
+
+      // Вкладка «Рацион»: Съел / Заменить / Удалить перекус
+      document.getElementById('tab-ration').addEventListener('click', function (e) {
+        var eatenBtn = e.target.closest('[data-toggle-eaten]');
+        if (eatenBtn) {
+          var mt = eatenBtn.getAttribute('data-toggle-eaten');
+          for (var i = 0; i < state.menu.length; i++) {
+            if (state.menu[i].mealType === mt) { state.menu[i].eaten = !state.menu[i].eaten; break; }
+          }
+          saveState();
+          renderRationTab();
+          return;
+        }
+
+        var swapBtn = e.target.closest('[data-swap]');
+        if (swapBtn) {
+          if (!isProActive()) {
+            activatePro24h();
+            return;
+          }
+          var mealType = swapBtn.getAttribute('data-swap');
+          var idx = MEAL_TYPES.indexOf(mealType);
+          var pool = getDishesPool(mealType, state.params.budget);
+          var curIdx = pool.findIndex ? pool.findIndex(function (d) { return d.id === state.menu[idx].dishId; }) : 0;
+          var nextDish = pool[(curIdx + 1) % pool.length];
+          var flags = state.menu.map(function (m) { return m.eaten; });
+          flags[idx] = false;
+          var dishes = state.menu.map(function (m, i) { return i === idx ? nextDish : getDishById(m.dishId); });
+          state.menu = optimizePortions(dishes, state.targets, flags);
+          saveState();
+          renderAll();
+          showToast('Блюдо заменено, граммовки и цена пересчитаны');
+          return;
+        }
+
+        var delCustom = e.target.closest('[data-del-custom]');
+        if (delCustom) {
+          var id = delCustom.getAttribute('data-del-custom');
+          state.customSnacks = state.customSnacks.filter(function (c) { return c.id !== id; });
+          saveState();
+          renderRationTab();
+        }
+      });
+
+      // Подобрать новое меню (PRO)
+      document.getElementById('btnRegenerateMenu').addEventListener('click', function () {
+        if (!isProActive()) { activatePro24h(); return; }
+        state.menu = generateSmartMenu(state.targets, state.params.budget, state.menu);
+        saveState();
+        renderAll();
+        showToast('Сформировано новое меню на день');
+      });
+
+      // Вода и Новый день
+      document.getElementById('btnAddWater').addEventListener('click', function () {
+        state.waterMl = Math.min(6000, state.waterMl + 250);
+        saveState();
+        renderRationTab();
+      });
+
+      document.getElementById('btnSubWater').addEventListener('click', function () {
+        state.waterMl = Math.max(0, state.waterMl - 250);
+        saveState();
+        renderRationTab();
+      });
+
+      document.getElementById('btnNewDay').addEventListener('click', function () {
+        state.menu.forEach(function (m) { m.eaten = false; });
+        state.customSnacks = [];
+        state.waterMl = 0;
+        saveState();
+        renderRationTab();
+        showToast('Новый день начат — отметки и вода сброшены');
+      });
+
+      document.getElementById('btnShareWall').addEventListener('click', shareResultOnWall);
+
+      // Свой перекус
+      document.getElementById('btnOpenCustomModal').addEventListener('click', function () {
+        document.getElementById('customModal').classList.add('open');
+      });
+
+      document.getElementById('customSnackForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var name = document.getElementById('cmName').value.trim();
+        var kcal = parseInt(document.getElementById('cmKcal').value, 10) || 0;
+        var price = parseInt(document.getElementById('cmPrice').value, 10) || 0;
+        var p = parseInt(document.getElementById('cmP').value, 10) || 0;
+        var f = parseInt(document.getElementById('cmF').value, 10) || 0;
+        var c = parseInt(document.getElementById('cmC').value, 10) || 0;
+        if (!name || kcal <= 0) return;
+        state.customSnacks.push({ id: 'cs_' + Date.now(), name: name, kcal: kcal, price: price, p: p, f: f, c: c });
+        saveState();
+        renderRationTab();
+        document.getElementById('customModal').classList.remove('open');
+        document.getElementById('cmName').value = '';
+        showToast('Перекус добавлен в дневник');
+      });
+
+      // Вкладка «Холодильник»
+      document.getElementById('fridgeTagsContainer').addEventListener('click', function (e) {
+        var tagBtn = e.target.closest('[data-fridge-tag]');
+        if (!tagBtn) return;
+        var tid = tagBtn.getAttribute('data-fridge-tag');
+        var idx = state.fridgeTags.indexOf(tid);
+        if (idx === -1) state.fridgeTags.push(tid);
+        else state.fridgeTags.splice(idx, 1);
+        saveState();
+        renderFridgeTab();
+      });
+
+      document.getElementById('btnFridgeSelectBasic').addEventListener('click', function () {
+        state.fridgeTags = ['eggs', 'cottage_cheese', 'cheese', 'chicken_breast', 'buckwheat', 'oats', 'veg_seasonal', 'milk'];
+        saveState();
+        renderFridgeTab();
+      });
+
+      document.getElementById('btnFindFridgeDishes').addEventListener('click', function () {
+        if (!isProActive()) { activatePro24h(); return; }
+        state.fridgeSearched = true;
+        saveState();
+        renderFridgeTab();
+      });
+
+      document.getElementById('fridgeResultsWrap').addEventListener('click', function (e) {
+        var useBtn = e.target.closest('[data-use-fridge-dish]');
+        if (!useBtn) return;
+        var dish = getDishById(useBtn.getAttribute('data-use-fridge-dish'));
+        var idx = MEAL_TYPES.indexOf(dish.mealType);
+        var flags = state.menu.map(function (m) { return m.eaten; });
+        flags[idx] = false;
+        var dishes = state.menu.map(function (m, i) { return i === idx ? dish : getDishById(m.dishId); });
+        state.menu = optimizePortions(dishes, state.targets, flags);
+        saveState();
+        renderAll();
+        switchTab('tab-ration');
+        showToast('Блюдо добавлено в ваш рацион');
+      });
+
+      // Вкладка «Покупки и Цены»
+      document.getElementById('shopListCard').addEventListener('click', function (e) {
+        var row = e.target.closest('[data-shop-pid]');
+        if (!row) return;
+        var pid = row.getAttribute('data-shop-pid');
+        state.checkedItems[pid] = !state.checkedItems[pid];
+        saveState();
+        renderShopTab();
+      });
+
+      document.getElementById('shopListCard').addEventListener('keydown', function (e) {
+        if (e.key === ' ' || e.key === 'Enter') {
+          var row = e.target.closest('[data-shop-pid]');
+          if (!row) return;
+          e.preventDefault();
+          var pid = row.getAttribute('data-shop-pid');
+          state.checkedItems[pid] = !state.checkedItems[pid];
+          saveState();
+          renderShopTab();
+        }
+      });
+
+      document.getElementById('btnResetChecks').addEventListener('click', function () {
+        state.checkedItems = {};
+        saveState();
+        renderShopTab();
+        showToast('Галочки сброшены');
+      });
+
+      document.getElementById('btnCopyShop').addEventListener('click', function () {
+        var data = buildWeeklyShopping();
+        var lines = ['Список покупок на неделю (итого ~' + data.totalSum + ' ₽):', ''];
+        data.groups.forEach(function (gr) {
+          lines.push(gr.category + ':');
+          gr.items.forEach(function (it) { lines.push('• ' + it.name + ' — ' + formatWeight(it.grams) + ' (~' + it.cost + ' ₽)'); });
+          lines.push('');
+        });
+        copyTextFallback(lines.join('\n'), 'Чек покупок скопирован');
+      });
+
+      document.getElementById('btnOpenPriceEditor').addEventListener('click', function () {
+        if (!isProActive()) {
+          activatePro24h();
+          return;
+        }
+        renderPriceEditor();
+        document.getElementById('priceModal').classList.add('open');
+      });
+
+      document.getElementById('priceEditorBody').addEventListener('input', function (e) {
+        var pid = e.target.getAttribute('data-price-pid');
+        if (!pid) return;
+        var val = parseFloat(e.target.value);
+        state.customPrices[pid] = (!isNaN(val) && val >= 0) ? val : 0;
+        saveState();
+        renderRationTab();
+        renderShopTab();
+      });
+
+      document.getElementById('btnResetPrices').addEventListener('click', function () {
+        state.customPrices = getDefaultPrices();
+        saveState();
+        renderPriceEditor();
+        renderRationTab();
+        renderShopTab();
+        showToast('Цены восстановлены по умолчанию');
+      });
+
+      // Вкладка «Прогресс»: Взвешивание и Параметры
+      document.getElementById('weightLogForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var w = parseFloat(document.getElementById('inputNewWeight').value);
+        if (isNaN(w) || w < 35 || w > 220) {
+          showToast('Укажите вес от 35 до 220 кг');
+          return;
+        }
+        w = Math.round(w * 10) / 10;
+        var d = todayShort();
+        var last = state.weightLog[state.weightLog.length - 1];
+        if (last && last.date === d) last.weight = w;
+        else state.weightLog.push({ date: d, weight: w });
+
+        state.params.weight = w;
+        state.targets = calculateTargets(state.params);
+        saveState();
+        document.getElementById('inputNewWeight').value = '';
+        renderAll();
+        showToast('Вес записан и норма пересчитана');
+      });
+
+      document.getElementById('weightLogList').addEventListener('click', function (e) {
+        var del = e.target.closest('[data-del-weight]');
+        if (!del || state.weightLog.length <= 1) return;
+        var idx = parseInt(del.getAttribute('data-del-weight'), 10);
+        state.weightLog.splice(idx, 1);
+        saveState();
+        renderWeightChart();
+      });
+
+      document.querySelectorAll('#paramsForm [data-field]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var f = btn.getAttribute('data-field');
+          state.params[f] = btn.getAttribute('data-value');
+          document.querySelectorAll('#paramsForm [data-field="' + f + '"]').forEach(function (el) {
+            el.classList.toggle('active', el === btn);
+          });
+          saveState();
+        });
+      });
+
+      document.getElementById('paramsForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var age = parseFloat(document.getElementById('pAge').value);
+        var height = parseFloat(document.getElementById('pHeight').value);
+        var weight = parseFloat(document.getElementById('pWeight').value);
+        var targetWeight = parseFloat(document.getElementById('pTargetWeight').value);
+        if (isNaN(age) || age < 14 || age > 90 || isNaN(height) || height < 120 || height > 230 || isNaN(weight) || weight < 35 || weight > 220 || isNaN(targetWeight) || targetWeight < 35 || targetWeight > 220) {
+          showToast('Проверьте корректность введённых параметров');
+          return;
+        }
+        state.params.age = age;
+        state.params.height = height;
+        state.params.weight = weight;
+        state.params.targetWeight = targetWeight;
+        state.targets = calculateTargets(state.params);
+        state.menu = generateSmartMenu(state.targets, state.params.budget, null);
+        saveState();
+        renderAll();
+        switchTab('tab-ration');
+        showToast('Норма КБЖУ и меню обновлены');
+      });
+
+      // Закрытие модалок
+      document.querySelectorAll('[data-close]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          document.getElementById(btn.getAttribute('data-close')).classList.remove('open');
+        });
+      });
+
+      document.querySelectorAll('.modal-backdrop').forEach(function (bd) {
+        bd.addEventListener('click', function (e) {
+          if (e.target === bd) bd.classList.remove('open');
+        });
+      });
+
+      /* =========================================================
+         10. УТИЛИТЫ И СТАРТ
+      ========================================================= */
+      var toastTimer = null;
+      function showToast(msg) {
+        var el = document.getElementById('toast');
+        el.textContent = msg;
+        el.classList.add('visible');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { el.classList.remove('visible'); }, 2600);
+      }
+
+      function copyTextFallback(text, successMsg) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () { showToast(successMsg); }).catch(function () { legacyCopy(text, successMsg); });
+        } else {
+          legacyCopy(text, successMsg);
+        }
+      }
+
+      function legacyCopy(text, successMsg) {
+        try {
+          var ta = document.createElement('textarea');
+          ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+          document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+          document.body.removeChild(ta); showToast(successMsg);
+        } catch (e) { showToast('Не удалось скопировать'); }
+      }
+
+      function escapeHtml(str) {
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      function escapeAttr(str) {
+        return escapeHtml(str).replace(/'/g, '&#39;');
+      }
+
+      // Запуск и обновление таймера PRO раз в секунду
+      renderAll();
+      switchTab(state.activeTab || 'tab-ration');
+      setInterval(updateProBannerUI, 1000);
+    })();
+  </script>
+</body>
+</html>
